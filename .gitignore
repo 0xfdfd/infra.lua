@@ -69,6 +69,7 @@ dkms.conf
 /build.*
 /.vs
 /out
+/CMakeSettings.json
 *.tmp
 
 # Html document files
