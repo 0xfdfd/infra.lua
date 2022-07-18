@@ -8,7 +8,8 @@ target_link_libraries(infra_loader
 
 setup_target_wall(infra_loader)
 
-set(CASE_LIST)
+set(CASE_LIST
+    sha256_once)
 
 foreach (item IN LISTS CASE_LIST)
     add_test(NAME ${item}

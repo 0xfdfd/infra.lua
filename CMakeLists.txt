@@ -13,7 +13,8 @@ find_package(Lua REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/lua_api.c
-    src/lua_get_api_info.c)
+    src/lua_get_api_info.c
+    src/lua_sha256.c)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
