@@ -1,4 +1,5 @@
 #include "lua_api.h"
+#include "lua_errno.h"
 #include "lua_get_api_info.h"
 #include "lua_sha256.h"
 
@@ -16,6 +17,7 @@
  * @note Register in ASCII order.
  */
 #define INFRA_LUA_APIS(XX)          \
+    INFRA_LUA_API_STRERROR(XX)      \
     INFRA_LUA_API_GET_API_INFO(XX)  \
     INFRA_LUA_API_SHA256_ONCE(XX)
 
