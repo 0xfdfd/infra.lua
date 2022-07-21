@@ -32,6 +32,23 @@
 #   define API_LOCAL
 #endif
 
+#if !defined(offsetof)
+#   define offsetof(s,m) ((size_t)&(((s*)0)->m))
+#endif
+
+#if !defined(container_of)
+#   if defined(__GNUC__) || defined(__clang__)
+#       define container_of(ptr, type, member)   \
+            ({ \
+                const typeof(((type *)0)->member)*__mptr = (ptr); \
+                (type *)((char *)__mptr - offsetof(type, member)); \
+            })
+#   else
+#       define container_of(ptr, type, member)   \
+            ((type *) ((char *) (ptr) - offsetof(type, member)))
+#   endif
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 // Application Programming Interface
 ///////////////////////////////////////////////////////////////////////////////
