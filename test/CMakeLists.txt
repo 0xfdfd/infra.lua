@@ -9,6 +9,7 @@ target_link_libraries(infra_loader
 setup_target_wall(infra_loader)
 
 set(CASE_LIST
+    dump_value_as_string
     sha256_once
     strerror
     task)
