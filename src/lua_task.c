@@ -148,11 +148,18 @@ static void _task_set_metatable(lua_State* L)
 
 static void _task_on_coroutine_run(uv_idle_t *handle)
 {
+    int errcode;
     coroutine_record_t* rec = container_of(handle, coroutine_record_t, addon.execution);
     infra_scheduler_t* scheduler = rec->scheduler;
 
+#if LUA_VERSION_NUM == 504
     int n_results = 0;
-    int errcode = lua_resume(rec->data.co_thread, scheduler->host_vm, 0, &n_results);
+    errcode = lua_resume(rec->data.co_thread, scheduler->host_vm, 0, &n_results);
+#elif LUA_VERSION_NUM <= 503
+    errcode = lua_resume(rec->data.co_thread, scheduler->host_vm, 0);
+#else
+#error unsupport lua version
+#endif
 
     if (errcode == LUA_YIELD)
     {

@@ -12,7 +12,7 @@ function(setup_target_wall name)
 endfunction()
 
 find_package(Lua REQUIRED)
-find_package(UV REQUIRED)
+find_package(LibUV REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/utils/list.c
@@ -29,13 +29,12 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         ${LUA_INCLUDE_DIR}
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${UV_INCLUDE_DIR})
+        ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${LUA_LIBRARY}
-        ${UV_LIBRARY})
+        libuv)
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")
 setup_target_wall(${PROJECT_NAME})
