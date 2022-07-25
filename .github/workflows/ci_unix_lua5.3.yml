@@ -1,4 +1,4 @@
-name: ci-unix
+name: ci-unix-lua5.3
 
 on: [push]
 
