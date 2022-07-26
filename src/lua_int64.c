@@ -496,3 +496,15 @@ int infra_int64(lua_State* L)
     int64_t v2 = luaL_checkinteger(L, 2);
     return infra_push_int64(L, (v1 << 32) + v2);
 }
+
+int64_t infra_get_int64(lua_State* L, int idx)
+{
+    infra_int64_t* d64_obj = lua_touserdata(L, idx);
+    return d64_obj->value;
+}
+
+uint64_t infra_get_uint64(lua_State* L, int idx)
+{
+    infra_uint64_t* u64_obj = lua_touserdata(L, idx);
+    return u64_obj->value;
+}

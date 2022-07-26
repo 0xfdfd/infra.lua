@@ -1,8 +1,10 @@
 #include "lua_api.h"
+#include "lua_constant.h"
 #include "lua_dump.h"
 #include "lua_errno.h"
 #include "lua_get_api_info.h"
 #include "lua_int64.h"
+#include "lua_json.h"
 #include "lua_sha256.h"
 #include "lua_task.h"
 
@@ -28,7 +30,10 @@
     INFRA_LUA_API_TASK_INFO(XX)             \
     INFRA_LUA_API_DUMP_VALUE_AS_STRING(XX)  \
     INFRA_LUA_API_INT64(XX)                 \
-    INFRA_LUA_API_UINT64(XX)
+    INFRA_LUA_API_UINT64(XX)                \
+    INFRA_LUA_API_TABLE_TO_JSON(XX)         \
+    INFRA_LUA_API_JSON_TO_TABLE(XX)         \
+    INFRA_LUA_API_NULL(XX)
 
 #define EXPAND_INFRA_APIS_AS_REG(name, func, init, brief, document)   \
     { name, func },

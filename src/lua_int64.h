@@ -82,6 +82,10 @@ API_LOCAL int infra_int64(lua_State* L);
  */
 API_LOCAL int infra_push_int64(lua_State* L, int64_t val);
 
+API_LOCAL int64_t infra_get_int64(lua_State* L, int idx);
+
+API_LOCAL uint64_t infra_get_uint64(lua_State* L, int idx);
+
 #ifdef __cplusplus
 }
 #endif
