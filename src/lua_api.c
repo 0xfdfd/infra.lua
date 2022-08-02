@@ -2,6 +2,7 @@
 #include "lua_dump.h"
 #include "lua_errno.h"
 #include "lua_get_api_info.h"
+#include "lua_int64.h"
 #include "lua_sha256.h"
 #include "lua_task.h"
 
@@ -25,7 +26,9 @@
     INFRA_LUA_API_TASK_READY(XX)            \
     INFRA_LUA_API_TASK_WAIT(XX)             \
     INFRA_LUA_API_TASK_INFO(XX)             \
-    INFRA_LUA_API_DUMP_VALUE_AS_STRING(XX)
+    INFRA_LUA_API_DUMP_VALUE_AS_STRING(XX)  \
+    INFRA_LUA_API_INT64(XX)                 \
+    INFRA_LUA_API_UINT64(XX)
 
 #define EXPAND_INFRA_APIS_AS_REG(name, func, init, brief, document)   \
     { name, func },
@@ -78,4 +81,21 @@ void lua_api_foreach(lua_api_foreach_fn cb, void* arg)
             break;
         }
     }
+}
+
+int infra_typeerror(lua_State *L, int arg, const char *tname)
+{
+#if LUA_VERSION_NUM >= 504
+    return luaL_typeerror(L, arg, tname);
+#else
+    lua_Debug ar;
+    if (!lua_getstack(L, 0, &ar))
+    {
+        return luaL_error(L, "bad argument #%d (%s expected, got %s)",
+            arg, tname, luaL_typename(L, arg));
+    }
+    lua_getinfo(L, "n", &ar);
+    return luaL_error(L, "bad argument #%d to '%s' (%s expected, got %s)",\
+                arg, ar.name ? ar.name : "?", tname, luaL_typename(L, arg));
+#endif
 }

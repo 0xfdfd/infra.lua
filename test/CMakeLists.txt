@@ -10,6 +10,7 @@ setup_target_wall(infra_loader)
 
 set(CASE_LIST
     dump_value_as_string
+    int64
     sha256_once
     strerror
     task)

@@ -88,6 +88,17 @@ typedef int (*lua_api_foreach_fn)(const infra_lua_api_t* api, void* arg);
  */
 API_LOCAL void lua_api_foreach(lua_api_foreach_fn cb, void* arg);
 
+/**
+ * @brief Raises a type error for the argument arg of the C function that
+ *   called it, using a standard message.
+ * @note This function never returns.
+ * @param[in] L     Lua VM.
+ * @param[in] arg   Argument index.
+ * @param[in] tname The expected type.
+ * @return          Must ignored.
+ */
+API_LOCAL int infra_typeerror(lua_State *L, int arg, const char *tname);
+
 #ifdef __cplusplus
 }
 #endif
