@@ -5,8 +5,10 @@
 #include "lua_get_api_info.h"
 #include "lua_int64.h"
 #include "lua_json.h"
+#include "lua_list.h"
 #include "lua_sha256.h"
 #include "lua_task.h"
+#include <stdlib.h>
 
 /**
  * @brief Infra API.
@@ -33,7 +35,8 @@
     INFRA_LUA_API_UINT64(XX)                \
     INFRA_LUA_API_TABLE_TO_JSON(XX)         \
     INFRA_LUA_API_JSON_TO_TABLE(XX)         \
-    INFRA_LUA_API_NULL(XX)
+    INFRA_LUA_API_NULL(XX)                  \
+    INFRA_LUA_API_NEW_LIST(XX)
 
 #define EXPAND_INFRA_APIS_AS_REG(name, func, init, brief, document)   \
     { name, func },
@@ -103,4 +106,22 @@ int infra_typeerror(lua_State *L, int arg, const char *tname)
     return luaL_error(L, "bad argument #%d to '%s' (%s expected, got %s)",\
                 arg, ar.name ? ar.name : "?", tname, luaL_typename(L, arg));
 #endif
+}
+
+void* infra_malloc(lua_State* L, size_t size)
+{
+    void* p = malloc(size);
+    if (p == NULL)
+    {
+        luaL_error(L, "out of memory");
+        return NULL;
+    }
+
+    return p;
+}
+
+void infra_free(lua_State* L, void* p)
+{
+    (void)L;
+    free(p);
 }

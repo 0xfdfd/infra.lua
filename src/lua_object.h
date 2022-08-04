@@ -9,7 +9,8 @@
  */
 #define LUA_OBJECT_TABLE(XX)    \
     XX(INFRA_INT64)             \
-    XX(INFRA_UINT64)
+    XX(INFRA_UINT64)            \
+    XX(INFRA_LIST)
 
 #ifdef __cplusplus
 extern "C" {

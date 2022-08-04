@@ -3,6 +3,7 @@
 #include "lua_errno.h"
 #include "lua_int64.h"
 #include "lua_object.h"
+#include "lua_list.h"
 #include "utils/list.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -13,9 +14,10 @@
 
 typedef struct dump_helper
 {
-    char        tmp[64];
-    luaL_Buffer buf;
-}dump_helper_t;
+    lua_State*      L;          /**< Lua VM */
+    luaL_Buffer     buf;        /**< Result buffer */
+    char            tmp[64];    /**< Temporary buffer*/
+} dump_helper_t;
 
 typedef struct json_parser_record
 {
@@ -62,13 +64,13 @@ typedef struct json_parser
     ev_list_t               r_stack;    /**< Parser stack */
 } json_parser_t;
 
-static void _t2j_dump_value_to_buf(dump_helper_t* helper, int* cnt, lua_State* L, int idx);
+static void _t2j_dump_value_to_buf(dump_helper_t* helper, int* cnt, int idx);
 
-static void _t2j_dump_string_as_json(dump_helper_t* helper, lua_State* L, int idx)
+static void _t2j_dump_string_as_json(dump_helper_t* helper, int idx)
 {
     size_t len;
     size_t i;
-    const char* str = lua_tolstring(L, idx, &len);
+    const char* str = lua_tolstring(helper->L, idx, &len);
     assert(str != NULL);
 
     luaL_addchar(&helper->buf, '"');
@@ -123,17 +125,17 @@ static int _table_is_array(lua_State* L, int idx)
     return 1;
 }
 
-static void _t2j_dump_table_as_json(dump_helper_t* helper, int* cnt, lua_State* L, int idx)
+static void _t2j_dump_table_as_json_template(dump_helper_t* helper, int* cnt,
+    int idx, int is_array, int(*next)(lua_State*, int))
 {
     int new_cnt = 0;
-    int top = lua_gettop(L);
-    int is_array = _table_is_array(L, idx);
+    int top = lua_gettop(helper->L);
 
     luaL_addstring(&helper->buf, is_array ? "[" : "{");
     cnt = &new_cnt;
 
-    lua_pushnil(L);
-    while (lua_next(L, idx) != 0)
+    lua_pushnil(helper->L);
+    while (next(helper->L, idx) != 0)
     {
         if (*cnt > 0)
         {
@@ -142,16 +144,27 @@ static void _t2j_dump_table_as_json(dump_helper_t* helper, int* cnt, lua_State* 
 
         if (!is_array)
         {
-            _t2j_dump_value_to_buf(helper, cnt, L, top + 1);
+            _t2j_dump_value_to_buf(helper, cnt, top + 1);
             luaL_addlstring(&helper->buf, ":", 1);
         }
 
-        _t2j_dump_value_to_buf(helper, cnt, L, top + 2);
+        _t2j_dump_value_to_buf(helper, cnt, top + 2);
 
-        lua_pop(L, 1);
+        lua_pop(helper->L, 1);
     }
 
     luaL_addstring(&helper->buf, is_array ? "]": "}");
+}
+
+static void _t2j_dump_table_as_json(dump_helper_t* helper, int* cnt, int idx)
+{
+    int is_array = _table_is_array(helper->L, idx);
+    _t2j_dump_table_as_json_template(helper, cnt, idx, is_array, lua_next);
+}
+
+static void _t2j_dump_array_as_json(dump_helper_t* helper, int* cnt, int idx)
+{
+    _t2j_dump_table_as_json_template(helper, cnt, idx, 1, infra_list_next);
 }
 
 /* securely comparison of floating-point variables */
@@ -195,9 +208,9 @@ static void _t2j_dump_number(dump_helper_t* helper, double val)
     luaL_addlstring(&helper->buf, helper->tmp, len);
 }
 
-static void _t2j_dump_value_to_buf(dump_helper_t* helper, int* cnt, lua_State* L, int idx)
+static void _t2j_dump_value_to_buf(dump_helper_t* helper, int* cnt, int idx)
 {
-    int val_type = infra_type(L, idx);
+    int val_type = infra_type(helper->L, idx);
 
     *cnt += 1;
 
@@ -208,41 +221,45 @@ static void _t2j_dump_value_to_buf(dump_helper_t* helper, int* cnt, lua_State* L
         break;
 
     case LUA_TNUMBER:
-        _t2j_dump_number(helper, lua_tonumber(L, idx));
+        _t2j_dump_number(helper, lua_tonumber(helper->L, idx));
         break;
 
     case LUA_TBOOLEAN:
-        if (lua_toboolean(L, idx))
+        if (lua_toboolean(helper->L, idx))
         {
-            luaL_addlstring(&helper->buf,  "true", 4);
+            luaL_addlstring(&helper->buf, "true", 4);
         }
         else
         {
-            luaL_addlstring(&helper->buf,  "false", 5);
+            luaL_addlstring(&helper->buf, "false", 5);
         }
         break;
 
     case LUA_TSTRING:
-        _t2j_dump_string_as_json(helper, L, idx);
+        _t2j_dump_string_as_json(helper, idx);
         break;
 
     case LUA_TTABLE:
-        _t2j_dump_table_as_json(helper, cnt, L, idx);
+        _t2j_dump_table_as_json(helper, cnt, idx);
         break;
 
     case LUA_TLIGHTUSERDATA:
-        if (lua_touserdata(L, idx) == NULL)
+        if (lua_touserdata(helper->L, idx) == NULL)
         {
             luaL_addlstring(&helper->buf, "null", 4);
         }
         break;
 
     case INFRA_INT64:
-        _t2j_dump_number(helper, (double)infra_get_int64(L, idx));
+        _t2j_dump_number(helper, (double)infra_get_int64(helper->L, idx));
         break;
 
     case INFRA_UINT64:
-        _t2j_dump_number(helper, (double)infra_get_uint64(L, idx));
+        _t2j_dump_number(helper, (double)infra_get_uint64(helper->L, idx));
+        break;
+
+    case INFRA_LIST:
+        _t2j_dump_array_as_json(helper, cnt, idx);
         break;
 
     default:
@@ -258,10 +275,11 @@ int infra_table_to_json(lua_State* L)
     }
 
     dump_helper_t helper;
+    helper.L = L;
     luaL_buffinit(L, &helper.buf);
 
     int cnt = 0;
-    _t2j_dump_value_to_buf(&helper, &cnt, L, 1);
+    _t2j_dump_value_to_buf(&helper, &cnt, 1);
 
     luaL_pushresult(&helper.buf);
     return 1;

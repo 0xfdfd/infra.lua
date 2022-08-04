@@ -12,6 +12,7 @@ set(CASE_LIST
     dump_value_as_string
     int64
     json
+    list
     sha256_once
     strerror
     task)
