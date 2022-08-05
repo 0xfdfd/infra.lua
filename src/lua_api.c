@@ -1,6 +1,7 @@
 #include "lua_api.h"
 #include "lua_constant.h"
 #include "lua_dump.h"
+#include "lua_equal.h"
 #include "lua_errno.h"
 #include "lua_get_api_info.h"
 #include "lua_int64.h"
@@ -35,7 +36,8 @@
     INFRA_LUA_API_UINT64(XX)                \
     INFRA_LUA_API_NULL(XX)                  \
     INFRA_LUA_API_NEW_LIST(XX)              \
-    INFRA_LUA_API_NEW_JSON(XX)
+    INFRA_LUA_API_NEW_JSON(XX)              \
+    INFRA_LUA_API_EQUAL(XX)
 
 #define EXPAND_INFRA_APIS_AS_REG(name, func, init, brief, document)   \
     { name, func },

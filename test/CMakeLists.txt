@@ -10,6 +10,7 @@ setup_target_wall(infra_loader)
 
 set(CASE_LIST
     dump_value_as_string
+    equal
     int64
     json
     list

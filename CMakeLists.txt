@@ -21,6 +21,7 @@ add_library(${PROJECT_NAME}
     src/lua_api.c
     src/lua_constant.c
     src/lua_dump.c
+    src/lua_equal.c
     src/lua_errno.c
     src/lua_get_api_info.c
     src/lua_int64.c
