@@ -1,9 +1,11 @@
 local infra = require('infra')
 
+local json = infra.new_json()
+
 -- json to table
 do
     local data = "{ \"a\": [ \"b\", \"c\" ] }"
-    io.write(infra.dump_value_as_string(infra.json_to_table(data)) .. '\n')
+    io.write(infra.dump_value_as_string(json:decode(data)) .. '\n')
 end
 
 -- table to json
@@ -17,7 +19,7 @@ do
     test_data.e = infra.int64(1, 2)
     test_data.f = infra.uint64(3, 4)
 
-    io.write(infra.table_to_json(test_data) .. "\n")
+    io.write(json:encode(test_data) .. "\n")
 end
 
 do
@@ -30,5 +32,5 @@ do
     test_data.a = test_list
     test_data.c = true
 
-    io.write(infra.table_to_json(test_data) .. "\n")
+    io.write(json:encode(test_data) .. "\n")
 end

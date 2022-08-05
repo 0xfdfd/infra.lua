@@ -33,10 +33,9 @@
     INFRA_LUA_API_DUMP_VALUE_AS_STRING(XX)  \
     INFRA_LUA_API_INT64(XX)                 \
     INFRA_LUA_API_UINT64(XX)                \
-    INFRA_LUA_API_TABLE_TO_JSON(XX)         \
-    INFRA_LUA_API_JSON_TO_TABLE(XX)         \
     INFRA_LUA_API_NULL(XX)                  \
-    INFRA_LUA_API_NEW_LIST(XX)
+    INFRA_LUA_API_NEW_LIST(XX)              \
+    INFRA_LUA_API_NEW_JSON(XX)
 
 #define EXPAND_INFRA_APIS_AS_REG(name, func, init, brief, document)   \
     { name, func },

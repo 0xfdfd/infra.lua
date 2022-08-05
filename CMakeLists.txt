@@ -13,6 +13,7 @@ endfunction()
 
 find_package(Lua REQUIRED)
 find_package(LibUV REQUIRED)
+find_package(cJSON REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/utils/list.c
@@ -41,6 +42,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${LUA_LIBRARY}
         libuv
+        cJSON::cJSON
         m)
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")

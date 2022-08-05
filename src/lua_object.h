@@ -10,7 +10,8 @@
 #define LUA_OBJECT_TABLE(XX)    \
     XX(INFRA_INT64)             \
     XX(INFRA_UINT64)            \
-    XX(INFRA_LIST)
+    XX(INFRA_LIST)              \
+    XX(INFRA_JSON)
 
 #ifdef __cplusplus
 extern "C" {

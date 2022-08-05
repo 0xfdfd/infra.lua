@@ -44,6 +44,20 @@ XX(                                                                             
 "    A table that equal to original json string."                                   "\n"\
 )
 
+#define INFRA_LUA_API_NEW_JSON(XX)                                                      \
+XX(                                                                                     \
+"new_json", infra_new_json, NULL,                                                       \
+"Create a json convertor.",                                                             \
+"SYNOPSIS"                                                                          "\n"\
+"    json new_json();"                                                              "\n"\
+                                                                                    "\n"\
+"DESCRIPTION"                                                                       "\n"\
+"    The `new_json()` function create a json convertor and return."                 "\n"\
+                                                                                    "\n"\
+"RETURN VALUE"                                                                      "\n"\
+"    A json convertor."                                                             "\n"\
+)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +71,8 @@ API_LOCAL int infra_table_to_json(lua_State* L);
  * @see INFRA_LUA_API_JSON_TO_TABLE
  */
 API_LOCAL int infra_json_to_table(lua_State* L);
+
+API_LOCAL int infra_new_json(lua_State* L);
 
 #ifdef __cplusplus
 }
