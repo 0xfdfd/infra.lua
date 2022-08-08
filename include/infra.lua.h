@@ -1,18 +1,11 @@
 #ifndef __INFRA_LUA_H__
 #define __INFRA_LUA_H__
+
+#include <infra.lua/map.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#if defined(_WIN32)
-#   define INFRA_API    __declspec(dllexport)
-#else
-#   define INFRA_API
-#endif
-
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
 
 /**
  * @brief Entrypoint for infra.

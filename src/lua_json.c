@@ -8,6 +8,10 @@
 #include <float.h>
 #include <cjson/cJSON.h>
 
+#if defined(_MSC_VER)
+#   define sscanf(buffer, fmt, ...) sscanf_s(buffer, fmt, __VA_ARGS__)
+#endif
+
 typedef struct dump_helper
 {
     lua_State*      L;          /**< Lua VM */

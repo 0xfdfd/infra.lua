@@ -36,6 +36,7 @@
     INFRA_LUA_API_UINT64(XX)                \
     INFRA_LUA_API_NULL(XX)                  \
     INFRA_LUA_API_NEW_LIST(XX)              \
+    INFRA_LUA_API_NEW_MAP(XX)               \
     INFRA_LUA_API_NEW_JSON(XX)              \
     INFRA_LUA_API_EQUAL(XX)
 

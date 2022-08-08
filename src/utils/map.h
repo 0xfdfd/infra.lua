@@ -240,6 +240,8 @@ void ev_map_init(ev_map_t* handler, ev_map_cmp_fn cmp, void* arg);
  */
 int ev_map_insert(ev_map_t* handler, ev_map_node_t* node);
 
+ev_map_node_t* ev_map_replace(ev_map_t* handler, ev_map_node_t* node);
+
 /**
  * @brief Delete the node from the map.
  * @warning The node must already in the map.

@@ -76,7 +76,7 @@ static uint64_t _to_uint64(lua_State* L, int idx)
         {
             return lua_tointeger(L, idx);
         }
-        return lua_tonumber(L, idx);
+        return (uint64_t)lua_tonumber(L, idx);
     }
 
     if (val_type == INFRA_UINT64)
@@ -111,7 +111,7 @@ static int64_t _to_int64(lua_State* L, int idx)
         {
             return lua_tointeger(L, idx);
         }
-        return lua_tonumber(L, idx);
+        return (int64_t)lua_tonumber(L, idx);
     }
 
     if (val_type == INFRA_UINT64)
@@ -269,7 +269,7 @@ static int _int64_pow_compat(lua_State* L)
 static int _uint64_unm(lua_State* L)
 {
     uint64_t val = _to_uint64(L, 1);
-    return infra_push_uint64(L, -val);
+    return infra_push_uint64(L, (uint64_t)(0 - val));
 }
 
 static int _uint64_bor(lua_State* L)

@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME}
     src/lua_int64.c
     src/lua_json.c
     src/lua_list.c
+    src/lua_map.c
     src/lua_object.c
     src/lua_sha256.c
     src/lua_task.c)
@@ -43,8 +44,13 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${LUA_LIBRARY}
         libuv
-        cJSON::cJSON
-        m)
+        cJSON::cJSON)
+
+if (UNIX)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            m)
+endif ()
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")
 setup_target_wall(${PROJECT_NAME})

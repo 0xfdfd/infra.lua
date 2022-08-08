@@ -14,6 +14,7 @@ set(CASE_LIST
     int64
     json
     list
+    map
     sha256_once
     strerror
     task)

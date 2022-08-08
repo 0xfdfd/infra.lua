@@ -492,7 +492,12 @@ void ev_map_low_erase(ev_map_low_t* root, ev_map_low_node_t* node)
     ev_map_low_node_t* rebalance;
     rebalance = __rb_erase_augmented(node, root);
     if (rebalance)
+    {
         ____rb_erase_color(rebalance, root);
+    }
+    node->rb_left = NULL;
+    node->rb_right = NULL;
+    node->__rb_parent_color = NULL;
 }
 
 /*
@@ -616,6 +621,57 @@ int ev_map_insert(ev_map_t* handler, ev_map_node_t* node)
     ev_map_low_insert_color(node, &handler->map_low);
 
     return 0;
+}
+
+ev_map_node_t* ev_map_replace(ev_map_t* handler, ev_map_node_t* node)
+{
+    ev_map_low_node_t** new_node = &(handler->map_low.rb_root), * parent = NULL;
+
+    /* Figure out where to put new node */
+    while (*new_node)
+    {
+        int result = handler->cmp.cmp(node, *new_node, handler->cmp.arg);
+
+        parent = *new_node;
+        if (result < 0)
+        {
+            new_node = &((*new_node)->rb_left);
+        }
+        else if (result > 0)
+        {
+            new_node = &((*new_node)->rb_right);
+        }
+        else
+        {/* replace new_node with node */
+            node->rb_left = (*new_node)->rb_left;
+            node->rb_left->__rb_parent_color = (ev_map_low_node_t*)((uintptr_t)node | rb_color(node->rb_left));
+
+            node->rb_right = (*new_node)->rb_right;
+            node->rb_right->__rb_parent_color = (ev_map_low_node_t*)((uintptr_t)node | rb_color(node->rb_right));
+
+            node->__rb_parent_color = (*new_node)->__rb_parent_color;
+            if (rb_parent(node)->rb_left == *new_node)
+            {
+                rb_parent(node)->rb_left = node;
+            }
+            else
+            {
+                rb_parent(node)->rb_right = node;
+            }
+
+            (*new_node)->rb_left = NULL;
+            (*new_node)->rb_right = NULL;
+            (*new_node)->__rb_parent_color = 0;
+
+            return *new_node;
+        }
+    }
+
+    handler->size++;
+    ev_map_low_link_node(node, parent, new_node);
+    ev_map_low_insert_color(node, &handler->map_low);
+
+    return NULL;
 }
 
 void ev_map_erase(ev_map_t* handler, ev_map_node_t* node)
