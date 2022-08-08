@@ -1,8 +1,5 @@
-/**
- * @file
- */
-#ifndef __INFRA_LUA_API_MAP_H__
-#define __INFRA_LUA_API_MAP_H__
+#ifndef __INFRA_LUA_MAP_H__
+#define __INFRA_LUA_MAP_H__
 
 #include <infra.lua/defs.h>
 
@@ -10,159 +7,208 @@
 extern "C" {
 #endif
 
-#define INFRA_LUA_API_NEW_MAP(XX)   \
-XX(                                                                                     \
-"new_map", infra_new_map, NULL,                                                         \
-"Create a new list map.",                                                               \
-"SYNOPSIS"                                                                          "\n"\
-"    map new_map();"                                                                "\n"\
-"    map new_map(table);"                                                           "\n"\
-"    map new_map(map);"                                                             "\n"\
-"    map new_map(__pairs);"                                                         "\n"\
-                                                                                    "\n"\
-"DESCRIPTION"                                                                       "\n"\
-"    The `new_map()` function create a map."                                        "\n"\
-                                                                                    "\n"\
-"RETURN VALUE"                                                                      "\n"\
-"    A new map."                                                                    "\n"\
-)
-
 /**
  * @defgroup INFRA_MAP map
- * Checkout #infra_new_map() for lua methods.
+ *
+ * @section INFRA_MAP_SYNOPSIS 1. SYNOPSIS
+ *
+ * ```lua
+ * map infra.new_map();
+ * map infra.new_map(table);
+ * ```
+ *
+ * @section INFRA_MAP_DESCRIPTION 2. DESCRIPTION
+ *
+ * Create a new empty infra map.
+ *
+ * To create a map with key-value pair, pass a table to it. The parameter can
+ * be a lua table, a infra map, or any object that has `__pairs` metamethod.
+ *
+ * @subsection INFRA_MAP_DESCRIPTION_METHOD 2.1. METHOD
+ *
+ * The map support following method:
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_ASSIGN assign
+ *
+ * ```lua
+ * iter map:assign(key, value)
+ * ```
+ *
+ * Insert key-value pair into map. If key exists, the value replace the
+ * original one. Return a iterator point to this key-value pair.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_BEGIN begin
+ *
+ * ```lua
+ * iter map:begin()
+ * ```
+ *
+ * Get a iterator point to begin of map.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_CLEAR clear
+ *
+ * ```lua
+ * void map:clear()
+ * ```
+ *
+ * Clear contents.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_CLONE clone
+ *
+ * ```lua
+ * map map:clone()
+ * ```
+ *
+ * Clone self and return a new map. Modify the new map will not affect the
+ * original one. But note that key and value does not copied.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_COPY copy
+ *
+ * ```lua
+ * void map:copy(table, force)
+ * ```
+ *
+ * Copy all key-value pair from table into map. The `table` can be a lua
+ * table, a infra map, or anything with `__pairs` metamethod.
+ *
+ * If key already exist in table, the value is not updated. To overwrite, set
+ * `force` to true.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_EQUAL equal
+ *
+ * ```lua
+ * boolean map:equal(table)
+ * ```
+ *
+ * Compare with `table`. A table can be a lua table, a infra map, or any
+ * object have `__pairs` and `__index` metamethod.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_ERASE erase
+ *
+ * ```lua
+ * void map:erase(iter)
+ * ```
+ *
+ * Erase a map node which was point by `iter`.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_INSERT insert
+ *
+ * ```lua
+ * iter map:insert(key, value)
+ * ```
+ *
+ * Insert key-value pair into map. If key exists, the insert operation fails
+ * and return nil. Return a iterator point to this key-value pair.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_NEXT next
+ *
+ * ```lua
+ * iter map:next(iter)
+ * ```
+ *
+ * Get a iterator next to `iter`.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_SIZE size
+ *
+ * ```lua
+ * integer map:size()
+ * ```
+ *
+ * Get the number of key-value pair in this map.
+ *
+ * @subsection INFRA_MAP_DESCRIPTION_META_METHOD 2.2. META METHOD
+ *
+ * The map support following meta method:
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___ADD __add
+ *
+ * Union of Sets. Return a map contains all key-value pair from first operand
+ * and second operand.
+ *
+ * If the same key exists in both first operand and second operand, the value
+ * is taken from the first operand.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___BAND __band
+ *
+ * Intersection of Sets. Return a map contains shared key-value pair from
+ * first operand and second operand.
+ *
+ * The value comes from first operand.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___BOR __bor
+ *
+ * The same as meta method @ref INFRA_MAP_DESCRIPTION___ADD.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___EQ __eq
+ *
+ * Compare two infra map. Return true if all key-value pair are equal,
+ * otherwise return false.
+ *
+ * The second operand can be a lua table, a infra map, or any object have
+ * `__pairs` and `__index` meta method.
+ *
+ * Note: Due to lua limitation, only when both operand of `==` is a full
+ * userdata will trigger this meta method, so use `==` to compare infra map
+ * with lua table is just not working.  Either get meta method of `__eq` or use
+ * @ref INFRA_MAP_DESCRIPTION_EQUAL to do comparison when in pure lua code.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___GC __gc
+ *
+ * Life cycle is controlled by lua vm.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___INDEX __index
+ *
+ * The following syntax is allowed:
+ *
+ * ```lua
+ * v = t[k]
+ * ```
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___LEN __len
+ *
+ * The same as @ref INFRA_MAP_DESCRIPTION_SIZE.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___NEWINDEX __newindex
+ *
+ * The following syntax is allowed:
+ *
+ * ```lua
+ * t[k] = v
+ * ```
+ *
+ * Note that unlike lua table, `t[k] = nil` does not delete record, it only
+ * replace value with `nil`. Use @ref INFRA_MAP_DESCRIPTION_ERASE to completely
+ * delete a key-value pair.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___PAIRS __pairs
+ *
+ * The following syntax is allowed:
+ *
+ * ```lua
+ * for k,v in pairs(t) do body end
+ * ```
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___POW __pow
+ *
+ *   Complement of Sets.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION___SUB __sub
+ *
+ *   Set Difference.
+ *
+ * @section INFRA_MAP_RETURN 3. RETURN VALUE
+ *
+ * A new infra map.
+ *
  * @{
  */
 
 /**
- * @brief Create a new map and push it onto top of stack \p L.
- *
- * The map support following method:
- *
- * + `map:assign(key, value)`
- *
- *   Insert key-value pair into map. If key exists, the value replace the
- *   original one. Return a iterator point to this key-value pair.
- *
- * + `map:begin()`
- *
- *   Get a iterator point to begin of map.
- *
- * + `map:clear()`
- *
- *   Clear contents.
- *
- * + `map:clone()`
- *
- *   Clone self and return a new map. Modify the new map will not affect the
- *   original one. But note that key and value does not copied.
- *
- * + `map:copy(table)`
- *
- *   Copy all key-value pair from table into map. The `table` can be a lua
- *   table, a infra map, or anything with `__pairs` metamethod.
- *
- * + `map:equal(table)`
- *
- *   Compare with `table`. A table can be a lua table, a infra map, or any
- *   object have `__pairs` and `__index` metamethod.
- *
- * + `map:erase(iter)`
- *
- *   Erase a map node which was point by `iter`.
- *
- * + `iter map:insert(key, value)`
- *
- *   Insert key-value pair into map. If key exists, the insert operation fails
- *   and return nil. Return a iterator point to this key-value pair.
- *
- * + `map:next(iter)`
- *
- *   Get a iterator next to `iter`.
- *
- * + `map:size()`
- *
- *   Get the number of key-value pair in this map.
- *
- * The map support following metamethod:
- * + `__add`
- *
- *   Union of Sets. Return a map contains all key-value pair from first operand
- *   and second operand.
- *
- *   If the same key exists in both first operand and second operand, the value
- *   is taken from the first operand.
- *
- *   ```lua
- *   a = infra.new_map({"hello", "to"})
- *   b = infra.new_map({"hello", "world"})
- *   c = a + b
- *   assert(c == { "hello", "to", "world" })
- *   ```
- *
- * + `__band`
- *
- *   Intersection of Sets. Return a map contains shared key-value pair from
- *   first operand and second operand.
- *
- *   The value comes from first operand.
- *
- * + `__bor`
- *
- *   The same as metamethod `__add`.
- *
- * + `__eq`
- *
- *   Compare two infra map. Return true if all key-value pair are equal,
- *   otherwise return false.
- *
- *   The second operand can be a infra map, or any object have `__pairs` and
- *   `__index` metamethod.
- *
- *   Due to lua limitation, the second operand can not be lua table. Use
- *   `map:equal()` to do such compare.
- *
- * + `__gc`
- *
- *   Life cycle is controlled by lua vm.
- *
- * + `__index`
- *
- *   Syntax `v = t[k]` is allowed.
- *
- * + `__len`
- *
- *   The same as `map:size()`.
- *
- * + `__newindex`
- *
- *   Syntax `t[k] = v` is allowed.
- *
- *   Note that unlike lua table, `t[k] = nil` does not delete record, it only
- *   replace value with `nil`. Use `map:erase()` to completely delete a
- *   key-value pair.
- *
- * + `__pairs`
- *
- *   Syntax `for k,v in pairs(t) do body end` is allowed.
- *
- * + `__pow`
- *
- *   Complement of Sets.
- *
- * + `__sub`
- *
- *
- * @param[in] L     Lua VM.
- * @return          1 if success, 0 if failure.
- */
-INFRA_API int infra_new_map(lua_State* L);
-
-/**
- * @brief Push empty map on top of stack.
+ * @brief Create and push empty map on top of stack.
  * @param[out] L    Lua VM.
  * @return          Always 1.
  */
-INFRA_API int infra_push_empty_map(lua_State* L);
+INFRA_API int infra_map_new(lua_State* L);
 
 /**
  * @brief Compare infra map at \p idx1 with table at \p idx2.

@@ -1,6 +1,7 @@
 #ifndef __INFRA_LUA_H__
 #define __INFRA_LUA_H__
 
+#include <infra.lua/list.h>
 #include <infra.lua/map.h>
 
 #ifdef __cplusplus

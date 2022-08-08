@@ -7,6 +7,7 @@
 #include "lua_int64.h"
 #include "lua_json.h"
 #include "lua_list.h"
+#include "lua_map.h"
 #include "lua_sha256.h"
 #include "lua_task.h"
 #include <stdlib.h>
@@ -35,8 +36,6 @@
     INFRA_LUA_API_INT64(XX)                 \
     INFRA_LUA_API_UINT64(XX)                \
     INFRA_LUA_API_NULL(XX)                  \
-    INFRA_LUA_API_NEW_LIST(XX)              \
-    INFRA_LUA_API_NEW_MAP(XX)               \
     INFRA_LUA_API_NEW_JSON(XX)              \
     INFRA_LUA_API_EQUAL(XX)
 
@@ -44,7 +43,9 @@
     { name, func },
 static const luaL_Reg s_infra_api_reg[] = {
     INFRA_LUA_APIS(EXPAND_INFRA_APIS_AS_REG)
-    { NULL, NULL }
+    { "new_list",   infra_new_list },
+    { "new_map",    infra_new_map },
+    { NULL,     NULL }
 };
 #undef EXPAND_INFRA_APIS_AS_REG
 

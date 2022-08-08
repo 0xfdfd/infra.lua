@@ -687,7 +687,7 @@ static int _map_op_clear(lua_State* L)
 static int _map_op_clone(lua_State* L)
 {
     int sp = lua_gettop(L);
-    infra_push_empty_map(L);
+    infra_map_new(L);
     _map_copy(L, sp + 1, 1, 0);
     return 1;
 }
@@ -695,7 +695,8 @@ static int _map_op_clone(lua_State* L)
 static int _map_op_copy(lua_State* L)
 {
     int force = lua_toboolean(L, 3);
-    return _map_copy(L, 1, 2, force);
+    _map_copy(L, 1, 2, force);
+    return 0;
 }
 
 static int _map_op_equal(lua_State* L)
@@ -752,7 +753,7 @@ static int _map_meta_newindex(lua_State* L)
 static int _map_meta_bor(lua_State* L)
 {
     int sp = lua_gettop(L);
-    infra_push_empty_map(L);
+    infra_map_new(L);
     _map_copy(L, sp + 1, 1, 0);
     _map_copy(L, sp + 1, 2, 0);
 
@@ -765,7 +766,7 @@ static int _map_meta_bor(lua_State* L)
 static int _map_meta_band(lua_State* L)
 {
     int sp = lua_gettop(L);
-    infra_push_empty_map(L);
+    infra_map_new(L);
     infra_map_t* t1 = _get_map(L, 1);
     infra_map_t* t2 = _get_map_check(L, 2);
 
@@ -796,7 +797,7 @@ static int _map_meta_band(lua_State* L)
 static int _map_meta_sub(lua_State* L)
 {
     int sp = lua_gettop(L);
-    infra_push_empty_map(L);
+    infra_map_new(L);
     _map_diff(L, sp + 1, 1, 2);
     return 1;
 }
@@ -812,7 +813,7 @@ static int _map_meta_add(lua_State* L)
 static int _map_meta_pow(lua_State* L)
 {
     int sp = lua_gettop(L);
-    infra_push_empty_map(L);
+    infra_map_new(L);
     _map_diff(L, sp + 1, 1, 2);
     _map_diff(L, sp + 1, 2, 1);
     return 1;
@@ -858,7 +859,7 @@ static void _table_set_meta(lua_State* L)
     lua_setmetatable(L, -2);
 }
 
-int infra_push_empty_map(lua_State* L)
+int infra_map_new(lua_State* L)
 {
     infra_map_t* table = lua_newuserdata(L, sizeof(infra_map_t));
 
@@ -879,7 +880,7 @@ int infra_new_map(lua_State* L)
 {
     int sp = lua_gettop(L);
     int val_type = infra_type(L, 1);
-    infra_push_empty_map(L);
+    infra_map_new(L);
 
     if (val_type != LUA_TNIL)
     {
@@ -891,7 +892,7 @@ int infra_new_map(lua_State* L)
 
 int infra_map_compare(lua_State* L, int idx1, int idx2)
 {
-    infra_map_t* table = _get_map(L, idx1);
+    infra_map_t* table = _get_map_check(L, idx1);
     int val_type = infra_type(L, idx2);
 
     /* This is infra map */
