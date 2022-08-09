@@ -626,6 +626,7 @@ int ev_map_insert(ev_map_t* handler, ev_map_node_t* node)
 ev_map_node_t* ev_map_replace(ev_map_t* handler, ev_map_node_t* node)
 {
     ev_map_low_node_t** new_node = &(handler->map_low.rb_root), * parent = NULL;
+    handler->size++;
 
     /* Figure out where to put new node */
     while (*new_node)
@@ -667,7 +668,6 @@ ev_map_node_t* ev_map_replace(ev_map_t* handler, ev_map_node_t* node)
         }
     }
 
-    handler->size++;
     ev_map_low_link_node(node, parent, new_node);
     ev_map_low_insert_color(node, &handler->map_low);
 
