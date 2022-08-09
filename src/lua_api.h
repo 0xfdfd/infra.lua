@@ -54,6 +54,16 @@
         return luaL_error(L, "out of memory");\
     }
 
+/**
+ * @brief This macro can help programmers find bugs in their programs, or
+ *   handle exceptional cases via a crash that will produce limited debugging
+ *   output.
+ * @param[in] L     Lua VM.
+ * @param[in] x     expression.
+ */
+#define INFRA_ASSERT(L, x)  \
+    ((x) ? 0 : luaL_error(L, "%s:%d: %s: Assertion `%s` failed.", __FILE__, __LINE__, __FUNCTION__, #x))
+
 ///////////////////////////////////////////////////////////////////////////////
 // Application Programming Interface
 ///////////////////////////////////////////////////////////////////////////////

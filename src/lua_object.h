@@ -12,7 +12,8 @@
     XX(INFRA_UINT64)            \
     XX(INFRA_LIST)              \
     XX(INFRA_JSON)              \
-    XX(INFRA_MAP)
+    XX(INFRA_MAP)               \
+    XX(INFRA_MAP_VISITOR)
 
 #ifdef __cplusplus
 extern "C" {

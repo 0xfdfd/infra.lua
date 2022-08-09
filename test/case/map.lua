@@ -29,3 +29,10 @@ do
     local t1 = infra.new_map({ "hello", "world" })
     assert(t1:equal({ "hello", "world" }))
 end
+
+-- map.v
+do
+    local t = infra.new_map({ "h1", "h2", "h3" })
+    t:v()["hello"] = "world"
+    assert(t:v()["hello"] == "world")
+end

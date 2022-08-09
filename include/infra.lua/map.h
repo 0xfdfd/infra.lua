@@ -116,6 +116,26 @@ extern "C" {
  *
  * Get the number of key-value pair in this map.
  *
+ * @subsubsection INFRA_MAP_DESCRIPTION_V v
+ *
+ * ```lua
+ * visitor map:v()
+ * ```
+ *
+ * Get visitor for this map. You can use visitor to access key-value directly.
+ *
+ * Note that unlike lua table, `t[k] = nil` does not delete record, it only
+ * replace value with `nil`. Use @ref INFRA_MAP_DESCRIPTION_ERASE to completely
+ * delete a key-value pair.
+ *
+ * For example:
+ *
+ * ```lua
+ * local t = infra.new_map()
+ * t:v()["hello"] = "world"
+ * assert(t:v()["hello"] == "world")
+ * ```
+ *
  * @subsection INFRA_MAP_DESCRIPTION_META_METHOD 2.2. META METHOD
  *
  * The map support following meta method:
@@ -156,29 +176,9 @@ extern "C" {
  *
  * Life cycle is controlled by lua vm.
  *
- * @subsubsection INFRA_MAP_DESCRIPTION___INDEX __index
- *
- * The following syntax is allowed:
- *
- * ```lua
- * v = t[k]
- * ```
- *
  * @subsubsection INFRA_MAP_DESCRIPTION___LEN __len
  *
  * The same as @ref INFRA_MAP_DESCRIPTION_SIZE.
- *
- * @subsubsection INFRA_MAP_DESCRIPTION___NEWINDEX __newindex
- *
- * The following syntax is allowed:
- *
- * ```lua
- * t[k] = v
- * ```
- *
- * Note that unlike lua table, `t[k] = nil` does not delete record, it only
- * replace value with `nil`. Use @ref INFRA_MAP_DESCRIPTION_ERASE to completely
- * delete a key-value pair.
  *
  * @subsubsection INFRA_MAP_DESCRIPTION___PAIRS __pairs
  *

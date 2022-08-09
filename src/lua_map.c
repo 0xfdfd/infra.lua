@@ -23,6 +23,11 @@ typedef struct infra_table_node
     } data;
 } infra_map_node_t;
 
+typedef struct infra_map_visitor
+{
+    infra_map_t*    belong; /**< The map belong to */
+} infra_map_visitor_t;
+
 static int _map_compare_node(infra_map_t* table, infra_map_node_t* n1,
     infra_map_node_t* n2)
 {
@@ -63,15 +68,8 @@ static int _on_cmp_node(const ev_map_node_t* key1, const ev_map_node_t* key2,
     return _map_compare_node(table, n1, n2);
 }
 
-static int _map_erase_node(infra_map_t* table, infra_map_node_t* node, int erase)
+static void _map_unref_node(infra_map_t* table, infra_map_node_t* node)
 {
-    if (erase)
-    {
-        node->belong = NULL;
-        ev_map_erase(&table->table, &node->mnode);
-        ev_list_erase(&table->queue, &node->qnode);
-    }
-
     node->belong = NULL;
     if (node->data.k_ref != LUA_NOREF)
     {
@@ -88,8 +86,6 @@ static int _map_erase_node(infra_map_t* table, infra_map_node_t* node, int erase
         luaL_unref(table->L, LUA_REGISTRYINDEX, node->data.s_ref);
         node->data.s_ref = LUA_NOREF;
     }
-
-    return 0;
 }
 
 static infra_map_t* _get_map(lua_State* L, int idx)
@@ -114,8 +110,49 @@ static void _map_clear_all_node(infra_map_t* table)
         infra_map_node_t* node = container_of(it, infra_map_node_t, mnode);
         it = ev_map_next(it);
 
-        _map_erase_node(table, node, 1);
+        ev_map_erase(&table->table, &node->mnode);
+        ev_list_erase(&table->queue, &node->qnode);
+        _map_unref_node(table, node);
     }
+}
+
+static int _map_insert_direct(lua_State* L, infra_map_t* table, int kidx, int vidx, int force)
+{
+    infra_map_node_t* node = lua_newuserdata(L, sizeof(infra_map_node_t));
+    node->belong = table;
+
+    lua_pushvalue(L, -1);
+    node->data.s_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    lua_pushvalue(L, kidx);
+    node->data.k_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    lua_pushvalue(L, vidx);
+    node->data.v_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    ev_list_push_back(&table->queue, &node->qnode);
+
+    if (force)
+    {
+        ev_map_node_t* old_node = ev_map_replace(&table->table, &node->mnode);
+        if (old_node != NULL)
+        {
+            infra_map_node_t* orig_node = container_of(old_node, infra_map_node_t, mnode);
+            ev_list_erase(&table->queue, &orig_node->qnode);
+            _map_unref_node(table, orig_node);
+        }
+        return 1;
+    }
+
+    if (ev_map_insert(&table->table, &node->mnode) != 0)
+    {
+        ev_list_erase(&table->queue, &node->qnode);
+        _map_unref_node(table, node);
+        lua_pop(L, 1);
+        return 0;
+    }
+
+    return 1;
 }
 
 /**
@@ -132,39 +169,7 @@ static void _map_clear_all_node(infra_map_t* table)
 static int _map_insert(lua_State* L, int dst, int kidx, int vidx, int force)
 {
     infra_map_t* table = _get_map(L, dst);
-
-    infra_map_node_t* node = lua_newuserdata(L, sizeof(infra_map_node_t));
-    node->belong = table;
-
-    lua_pushvalue(L, -1);
-    node->data.s_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-    lua_pushvalue(L, kidx);
-    node->data.k_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-    lua_pushvalue(L, vidx);
-    node->data.v_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-    if (force)
-    {
-        ev_map_node_t* old_node = ev_map_replace(&table->table, &node->mnode);
-        if (old_node != NULL)
-        {
-            infra_map_node_t* orig_node = container_of(old_node, infra_map_node_t, mnode);
-            _map_erase_node(table, orig_node, 0);
-        }
-        return 1;
-    }
-
-    if (ev_map_insert(&table->table, &node->mnode) != 0)
-    {
-        _map_erase_node(table, node, 0);
-        lua_pop(L, 1);
-        return 0;
-    }
-    ev_list_push_back(&table->queue, &node->qnode);
-
-    return 1;
+    return _map_insert_direct(L, table, kidx, vidx, force);
 }
 
 /**
@@ -664,7 +669,9 @@ static int _map_op_erase(lua_State* L)
     infra_map_node_t* node = lua_touserdata(L, 2);
     if (node != NULL && node->belong != NULL)
     {
-        _map_erase_node(table, node, 1);
+        ev_list_erase(&table->queue, &node->qnode);
+        ev_map_erase(&table->table, &node->mnode);
+        _map_unref_node(table, node);
     }
 
     return 0;
@@ -705,12 +712,16 @@ static int _map_op_equal(lua_State* L)
     return 1;
 }
 
+static int _map_op_value(lua_State* L)
+{
+    lua_getuservalue(L, 1);
+    return 1;
+}
+
 static int _map_meta_gc(lua_State* L)
 {
     infra_map_t* table = _get_map(L, 1);
-
     _map_clear_all_node(table);
-
     return 0;
 }
 
@@ -730,21 +741,6 @@ static int _map_meta_len(lua_State* L)
 static int _map_meta_eq(lua_State* L)
 {
     return _map_op_equal(L);
-}
-
-static int _map_meta_index(lua_State* L)
-{
-    infra_map_t* table = _get_map(L, 1);
-    infra_map_node_t* node = _map_find_iter(L, table, 2);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, node->data.v_ref);
-    return 1;
-}
-
-static int _map_meta_newindex(lua_State* L)
-{
-    _map_op_assign(L);
-    lua_pop(L, 1);
-    return 0;
 }
 
 /**
@@ -819,7 +815,7 @@ static int _map_meta_pow(lua_State* L)
     return 1;
 }
 
-static void _table_set_meta(lua_State* L)
+static void _table_set_meta(lua_State* L, int idx)
 {
     static const luaL_Reg s_map_meta[] = {
         { "__eq",       _map_meta_eq },
@@ -828,14 +824,13 @@ static void _table_set_meta(lua_State* L)
         { "__bor",      _map_meta_bor },
         { "__band",     _map_meta_band },
         { "__pow",      _map_meta_pow },
-        { "__index",    _map_meta_index },
-        { "__newindex", _map_meta_newindex },
         { "__pairs",    _map_meta_pairs },
         { "__len",      _map_meta_len },
         { "__gc",       _map_meta_gc },
         { NULL,         NULL },
     };
     static const luaL_Reg s_map_method[] = {
+        { "v",          _map_op_value },
         { "copy",       _map_op_copy },
         { "clone",      _map_op_clone },
         { "clear",      _map_op_clear },
@@ -856,23 +851,66 @@ static void _table_set_meta(lua_State* L)
         luaL_newlib(L, s_map_method);
         lua_setfield(L, -2, "__index");
     }
-    lua_setmetatable(L, -2);
+    lua_setmetatable(L, idx);
+}
+
+static int _map_visitor_meta_gc(lua_State* L)
+{
+    infra_map_visitor_t* visitor = lua_touserdata(L, 1);
+    visitor->belong = NULL;
+    return 0;
+}
+
+static int _map_visitor_meta_index(lua_State* L)
+{
+    infra_map_visitor_t* visitor = lua_touserdata(L, 1);
+    infra_map_node_t* node = _map_find_iter(L, visitor->belong, 2);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, node->data.v_ref);
+    return 1;
+}
+
+static int _map_visitor_meta_newindex(lua_State* L)
+{
+    infra_map_visitor_t* visitor = lua_touserdata(L, 1);
+    _map_insert_direct(L, visitor->belong, 2, 3, 1);
+    lua_pop(L, 1);
+    return 0;
+}
+
+static void _table_visitor_set_meta(lua_State* L, int idx)
+{
+    static const luaL_Reg s_map_val_meta[] = {
+        { "__index",    _map_visitor_meta_index },
+        { "__newindex", _map_visitor_meta_newindex },
+        { "__gc",       _map_visitor_meta_gc },
+        { NULL,         NULL },
+    };
+    if (luaL_newmetatable(L, infra_type_name(INFRA_MAP_VISITOR)) != 0)
+    {
+        luaL_setfuncs(L, s_map_val_meta, 0);
+    }
+    lua_setmetatable(L, idx);
 }
 
 int infra_map_new(lua_State* L)
 {
-    infra_map_t* table = lua_newuserdata(L, sizeof(infra_map_t));
+    int sp = lua_gettop(L);
 
+    /* Initialize map */
+    infra_map_t* table = lua_newuserdata(L, sizeof(infra_map_t));
+    table->L = NULL;
     ev_map_init(&table->table, _on_cmp_node, table);
     ev_list_init(&table->queue);
+    _table_set_meta(L, sp + 1);
 
-    /*
-     * It is not safe to record LuaVM here, because this function may be called
-     * in lua thread.
-     */
-    table->L = NULL;
+    /* Initialize value */
+    infra_map_visitor_t* visitor = lua_newuserdata(L, sizeof(infra_map_visitor_t));
+    visitor->belong = table;
+    _table_visitor_set_meta(L, sp + 2);
 
-    _table_set_meta(L);
+    /* Bind value to map */
+    lua_setuservalue(L, sp + 1);
+
     return 1;
 }
 
