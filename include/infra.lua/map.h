@@ -94,7 +94,7 @@ extern "C" {
  * @subsubsection INFRA_MAP_DESCRIPTION_FOREACH foreach
  *
  * ```lua
- * void map:foreach(function (k, v) end)
+ * void map:foreach(function (k, v) return bool end)
  * ```
  *
  * Iterator all key and value pair.
@@ -117,6 +117,15 @@ extern "C" {
  * ```
  *
  * Get a iterator next to `iter`.
+ *
+ * @subsubsection INFRA_MAP_DESCRIPTION_SELECT select
+ *
+ * ```lua
+ * void map:select(function (k, v) return bool end)
+ * ```
+ *
+ * Select all elements in map that satisfy condition and return them as a new
+ * map.
  *
  * @subsubsection INFRA_MAP_DESCRIPTION_SIZE size
  *

@@ -270,8 +270,11 @@ static int _map_copy_from_map(lua_State* L, int dst, int src, int force)
     return 1;
 }
 
-static int _map_on_copy_from_pairs(lua_State* L, int key, int val, void* arg)
+static int _map_on_copy_from_pairs(lua_State* L, int sp, int key, int val,
+    void* arg)
 {
+    (void)sp;
+
     int* p_help = (int*)arg;
     int dst = p_help[0];
     int force = p_help[1];
@@ -480,7 +483,8 @@ static infra_map_node_t* _map_find_iter(lua_State* L, infra_map_t* table, int ke
     return it != NULL ? container_of(it, infra_map_node_t, mnode) : NULL;
 }
 
-static int _map_on_generic_pair(lua_State* L, int key, int value, void* arg)
+static int _map_on_generic_pair(lua_State* L, int sp, int key, int value,
+    void* arg)
 {
     void** p_helper = arg;
     infra_map_t* t2 = (infra_map_t*)p_helper[0];
@@ -495,7 +499,7 @@ static int _map_on_generic_pair(lua_State* L, int key, int value, void* arg)
     }
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, node->data.v_ref);
-    ret = lua_compare(L, value, -1, LUA_OPEQ);
+    ret = lua_compare(L, value, sp + 1, LUA_OPEQ);
     lua_pop(L, 1);
 
 finish:
@@ -536,6 +540,37 @@ static int _map_compare_lua_table_with_map(lua_State* L, int t1, infra_map_t* t2
 
     lua_settop(L, sp);
     return ret;
+}
+
+static int _map_on_foreach_op_cb(lua_State* L, int sp, int kidx, int vidx,
+    void* arg)
+{
+    (void)arg;
+
+    lua_pushvalue(L, 2);
+    lua_pushvalue(L, kidx);
+    lua_pushvalue(L, vidx);
+    lua_call(L, 2, 1);
+
+    return lua_toboolean(L, sp + 1);
+}
+
+static int _map_on_select_op_cb(lua_State* L, int sp, int kidx, int vidx,
+    void* arg)
+{
+    (void)arg;
+
+    lua_pushvalue(L, 2);
+    lua_pushvalue(L, kidx);
+    lua_pushvalue(L, vidx);
+    lua_call(L, 2, 1);
+
+    if (lua_toboolean(L, sp + 1))
+    {
+        _map_insert_no_iter(L, 3, kidx, vidx, 0);
+    }
+
+    return 1;
 }
 
 static int _map_op_assign(lua_State* L)
@@ -636,23 +671,17 @@ static int _map_op_value(lua_State* L)
     return 1;
 }
 
-static int _map_on_foreach_op_cb(lua_State* L, int kidx, int vidx, void* arg)
-{
-    (void)arg;
-    int sp = lua_gettop(L);
-
-    lua_pushvalue(L, 2);
-    lua_pushvalue(L, kidx);
-    lua_pushvalue(L, vidx);
-    lua_call(L, 2, 1);
-
-    return lua_toboolean(L, sp + 1);
-}
-
 static int _map_op_foreach(lua_State* L)
 {
     infra_pairs_foreach(L, 1, _map_on_foreach_op_cb, NULL);
     return 0;
+}
+
+static int _map_op_select(lua_State* L)
+{
+    infra_map_new(L);
+    infra_pairs_foreach(L, 1, _map_on_select_op_cb, NULL);
+    return 1;
 }
 
 static int _map_meta_gc(lua_State* L)
@@ -777,6 +806,7 @@ static void _table_set_meta(lua_State* L, int idx)
         { "foreach",    _map_op_foreach },
         { "insert",     _map_op_insert },
         { "next",       _map_op_next },
+        { "select",     _map_op_select },
         { "size",       _map_op_size },
         { "v",          _map_op_value },
         { NULL,         NULL },

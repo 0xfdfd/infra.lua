@@ -10,12 +10,14 @@ extern "C" {
 /**
  * @brief Iterator callback.
  * @param[in] L     Lua VM.
+ * @param[in] sp    The current SP. sp == lua_gettop(L).
  * @param[in] kidx  Key index.
  * @param[in] vidx  Value index.
  * @param[in] arg   User defined argument.
  * @return          0 to stop iterator, otherwise continue.
  */
-typedef int (*infra_pairs_foreach_cb)(lua_State* L, int kidx, int vidx, void* arg);
+typedef int (*infra_pairs_foreach_cb)(lua_State* L, int sp, int kidx, int vidx,
+    void* arg);
 
 /**
  * @brief Iterator all elements in object that has `__pairs` meta method.

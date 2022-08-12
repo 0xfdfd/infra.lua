@@ -37,6 +37,24 @@ do
     assert(i == #src)
 end
 
+-- map:select
+do
+    local src = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }
+    local map = infra.new_map(src)
+
+    local i = 0
+    map = map:select(function (k, v)
+        i = i + 1
+        return v < 5
+    end)
+
+    assert(i == #src)
+
+    for k, v in pairs(map) do
+        assert(v < 5)
+    end
+end
+
 -- map.__eq
 do
     local t1 = infra.new_map({ "hello", "world" })

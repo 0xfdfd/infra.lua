@@ -54,7 +54,7 @@ int infra_pairs_foreach(lua_State* L, int idx, infra_pairs_foreach_cb cb,
             break;
         }
 
-        if (cb(L, sp + 4, sp + 5, arg) == 0)
+        if (cb(L, sp + 5, sp + 4, sp + 5, arg) == 0)
         {
             break;
         }
