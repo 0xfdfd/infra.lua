@@ -91,6 +91,16 @@ extern "C" {
  *
  * Erase a map node which was point by `iter`.
  *
+ * @subsubsection INFRA_MAP_DESCRIPTION_FOREACH foreach
+ *
+ * ```lua
+ * void map:foreach(function (k, v) end)
+ * ```
+ *
+ * Iterator all key and value pair.
+ *
+ * Return `true` to continue iterator, return `false` to stop iterator.
+ *
  * @subsubsection INFRA_MAP_DESCRIPTION_INSERT insert
  *
  * ```lua

@@ -24,6 +24,19 @@ do
     assert(map == map2)
 end
 
+-- map:foreach
+do
+    local src = { "h1", "h2", "h3" }
+    local map = infra.new_map(src)
+    local i = 0
+    map:foreach(function (k,v)
+        assert(src[k] == v)
+        i = i + 1
+        return 1
+    end)
+    assert(i == #src)
+end
+
 -- map.__eq
 do
     local t1 = infra.new_map({ "hello", "world" })

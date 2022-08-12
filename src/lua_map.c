@@ -1,6 +1,7 @@
 #include "lua_object.h"
 #include "utils/map.h"
 #include "utils/list.h"
+#include "utils/pairs.h"
 
 typedef struct infra_map
 {
@@ -269,89 +270,6 @@ static int _map_copy_from_map(lua_State* L, int dst, int src, int force)
     return 1;
 }
 
-/**
- * @brief Iterator all items in \p idx.
- * @param[in] L     Lua VM.
- * @param[in] idx   Object index that have __pairs metamethod.
- * @param[in] cb    Iterator callback. Return 0 to stop iterator.
- * @param[in] arg   Pass to \p cb.
- * @return          1 if success, 0 if object at \p idx does not have `__pairs` metamethod.
- */
-static int _map_foreach_pairs(lua_State* L, int idx,
-    int(*cb)(lua_State*, int, int, void*), void* arg)
-{
-    int sp = lua_gettop(L);
-
-    int val_type = luaL_getmetafield(L, idx, "__pairs");
-    if (val_type == LUA_TNIL)
-    {
-        return 0;
-    }
-
-    lua_pushvalue(L, idx);
-    lua_call(L, 1, 3);
-
-    /*
-     * SP+1: next function
-     * SP+2: table
-     * SP+3: nil
-     */
-
-    int next_func = sp + 1;
-    int user_obj = sp + 2;
-
-    lua_pushvalue(L, next_func);
-    lua_pushvalue(L, user_obj);
-    lua_pushnil(L);
-
-    for (;;)
-    {
-        /*
-         * Required stack layout:
-         * SP+1: next function
-         * SP+2: table
-         * SP+3: nil
-         * SP+4: next function
-         * SP+5: table
-         * SP+6: key
-         */
-        lua_call(L, 2, 2);
-
-        /*
-         * After call:
-         * SP+1: next function
-         * SP+2: table
-         * SP+3: nil
-         * SP+4: key
-         * SP+5: value
-         */
-
-        if (lua_type(L, sp + 4) == LUA_TNIL)
-        {
-            break;
-        }
-
-        if (cb(L, sp + 4, sp + 5, arg) == 0)
-        {
-            break;
-        }
-
-        /* Push key to SP+6 */
-        lua_pushvalue(L, sp + 4);
-        /* Replace SP+4 with next function */
-        lua_pushvalue(L, next_func);
-        lua_replace(L, sp + 4);
-        /* Replace SP+5 with table object */
-        lua_pushvalue(L, user_obj);
-        lua_replace(L, sp + 5);
-    }
-
-    /* Restore stack */
-    lua_settop(L, sp);
-
-    return 1;
-}
-
 static int _map_on_copy_from_pairs(lua_State* L, int key, int val, void* arg)
 {
     int* p_help = (int*)arg;
@@ -373,7 +291,7 @@ static int _map_on_copy_from_pairs(lua_State* L, int key, int val, void* arg)
 static int _map_copy_from_pairs(lua_State* L, int dst, int src, int force)
 {
     int help[2] = { dst, force };
-    return _map_foreach_pairs(L, src, _map_on_copy_from_pairs, help);
+    return infra_pairs_foreach(L, src, _map_on_copy_from_pairs, help);
 }
 
 /**
@@ -588,7 +506,7 @@ finish:
 static int _map_compare_generic_wit_map(lua_State* L, int t1, infra_map_t* t2)
 {
     void* helper[2] = { t2, NULL };
-    if (_map_foreach_pairs(L, t1, _map_on_generic_pair, helper) == 0)
+    if (infra_pairs_foreach(L, t1, _map_on_generic_pair, helper) == 0)
     {
         return infra_typeerror(L, t1, "__pairs");
     }
@@ -718,6 +636,25 @@ static int _map_op_value(lua_State* L)
     return 1;
 }
 
+static int _map_on_foreach_op_cb(lua_State* L, int kidx, int vidx, void* arg)
+{
+    (void)arg;
+    int sp = lua_gettop(L);
+
+    lua_pushvalue(L, 2);
+    lua_pushvalue(L, kidx);
+    lua_pushvalue(L, vidx);
+    lua_call(L, 2, 1);
+
+    return lua_toboolean(L, sp + 1);
+}
+
+static int _map_op_foreach(lua_State* L)
+{
+    infra_pairs_foreach(L, 1, _map_on_foreach_op_cb, NULL);
+    return 0;
+}
+
 static int _map_meta_gc(lua_State* L)
 {
     infra_map_t* table = _get_map(L, 1);
@@ -830,17 +767,18 @@ static void _table_set_meta(lua_State* L, int idx)
         { NULL,         NULL },
     };
     static const luaL_Reg s_map_method[] = {
-        { "v",          _map_op_value },
-        { "copy",       _map_op_copy },
-        { "clone",      _map_op_clone },
-        { "clear",      _map_op_clear },
-        { "insert",     _map_op_insert },
         { "assign",     _map_op_assign },
         { "begin",      _map_op_begin },
-        { "next",       _map_op_next },
-        { "erase",      _map_op_erase },
-        { "size",       _map_op_size },
+        { "clear",      _map_op_clear },
+        { "clone",      _map_op_clone },
+        { "copy",       _map_op_copy },
         { "equal",      _map_op_equal },
+        { "erase",      _map_op_erase },
+        { "foreach",    _map_op_foreach },
+        { "insert",     _map_op_insert },
+        { "next",       _map_op_next },
+        { "size",       _map_op_size },
+        { "v",          _map_op_value },
         { NULL,         NULL },
     };
     if (luaL_newmetatable(L, infra_type_name(INFRA_MAP)) != 0)

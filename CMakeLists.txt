@@ -18,6 +18,7 @@ find_package(cJSON REQUIRED)
 add_library(${PROJECT_NAME}
     src/utils/list.c
     src/utils/map.c
+    src/utils/pairs.c
     src/lua_api.c
     src/lua_constant.c
     src/lua_dump.c
