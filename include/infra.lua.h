@@ -1,12 +1,35 @@
 #ifndef __INFRA_LUA_H__
 #define __INFRA_LUA_H__
 
-#include <infra.lua/list.h>
-#include <infra.lua/map.h>
+#if 0
+#if defined(_WIN32) || defined(__CYGWIN__)
+#	if defined(INFRA_LUA_EXPOSE_SYMBOLS)
+#		if defined(__GNUC__) || defined(__clang__)
+#			define INFRA_API	__attribute__ ((dllexport))
+#		else
+#			define INFRA_API	__declspec(dllexport)
+#		endif
+#	else
+#		if defined(__GNUC__) || defined(__clang__)
+#			define INFRA_API	__attribute__ ((dllimport))
+#		else
+#			define INFRA_API	__declspec(dllimport)
+#		endif
+#	endif
+#elif (defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)
+#	define INFRA_API __attribute__((visibility ("default")))
+#else
+#	define INFRA_API
+#endif
+#else
+#define INFRA_API
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct lua_State;
 
 /**
  * @defgroup INFRA infra
@@ -24,7 +47,7 @@ extern "C" {
  * @param[in] L Lua VM.
  * @return      Always 1.
  */
-INFRA_API int luaopen_infra(lua_State* L);
+INFRA_API int luaopen_infra(struct lua_State* L);
 
 /**
  * @}

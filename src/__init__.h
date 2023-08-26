@@ -5,6 +5,7 @@
 // HEADER FILES
 ///////////////////////////////////////////////////////////////////////////////
 
+#define INFRA_LUA_EXPOSE_SYMBOLS
 #include <infra.lua.h>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,21 +73,46 @@
 extern "C" {
 #endif
 
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 /**
  * @brief Initialize callback.
  * @warning Do not break stack balance.
  * @param[in] L     Host Lua VM.
+ * @param[out] addr Function address.
+ * @return          The number of upvalue.
  */
-typedef void (*infra_lua_init_fn)(lua_State* L);
+typedef int (*infra_api_init_fn)(lua_State* L, lua_CFunction* addr);
 
 typedef struct infra_lua_api
 {
-    const char*         name;       /**< Function name */
-    lua_CFunction       func;       /**< Function address */
-    infra_lua_init_fn   init;       /**< Initialize function */
+    const char*         name;       /**< Function name. */
+    lua_CFunction       addr;       /**< Function initialize entry. */
+    int                 upvalue;    /**< Whether require upvalue. */
     const char*         brief;      /**< Brief document. */
     const char*         document;   /**< Detail document. */
 } infra_lua_api_t;
+
+/**
+ * @brief This is the list of builtin APIs.
+ * @{
+ */
+extern const infra_lua_api_t infra_f_dirname;
+extern const infra_lua_api_t infra_f_dump_any;
+extern const infra_lua_api_t infra_f_dump_hex;
+extern const infra_lua_api_t infra_f_man;
+extern const infra_lua_api_t infra_f_merge_line;
+extern const infra_lua_api_t infra_f_split_line;
+extern const infra_lua_api_t infra_f_strcasecmp;
+/**
+ * @}
+ */
 
 /**
  * @breif API information callback.
@@ -112,26 +138,36 @@ API_LOCAL void lua_api_foreach(lua_api_foreach_fn cb, void* arg);
  * @param[in] tname The expected type.
  * @return          Must ignored.
  */
-API_LOCAL int infra_typeerror(lua_State *L, int arg, const char *tname);
+API_LOCAL int infra_typeerror(lua_State* L, int arg, const char *tname);
 
 /**
- * @brief Allocates \p size bytes and returns a pointer to the allocated
- *   memory.
- * This function never fail.
- * @note This memory does not registered into lua vm, you need to free it as
- *   long as don't need it.
- * @param[in] L     Lua VM.
- * @param[in] size  The number of bytes
- * @return          Allocated memory.
+ * @brief Compat for Windows and Unix
+ * @{
  */
-API_LOCAL void* infra_malloc(lua_State* L, size_t size);
+#if defined(_MSC_VER)
+
+#define strtok_r(str, delim, saveptr)   strtok_s(str, delim, saveptr)
+#define strerror_r(errcode, buf, len)   strerror_s(buf,len, errcode)
+#define strdup(s)                       _strdup(s)
+#define strcasecmp(s1, s2)              _stricmp(s1, s2)
+
+#else
 
 /**
- * @brief Free memory allocated by #infra_malloc().
- * @param[in] L     Lua VM.
- * @param[in] p     The allocated memory.
+ * @brief Opens a file.
+ * @see fopen()
+ * @param[out] pFile    A pointer to the file pointer that will receive the
+ *   pointer to the opened file.
+ * @param[in] filename  Filename.
+ * @param[in] mode      Type of access permitted.
+ * @return              Zero if successful; an error code on failure.
  */
-API_LOCAL void infra_free(lua_State* L, void* p);
+int fopen_s(FILE** pFile, const char* filename, const char* mode);
+
+#endif
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 }

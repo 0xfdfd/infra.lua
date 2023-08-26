@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 project(infra)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 function(setup_target_wall name)
     if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(${name} PRIVATE /W4 /WX)
@@ -12,26 +10,16 @@ function(setup_target_wall name)
 endfunction()
 
 find_package(Lua REQUIRED)
-find_package(LibUV REQUIRED)
-find_package(cJSON REQUIRED)
 
 add_library(${PROJECT_NAME}
-    src/utils/list.c
-    src/utils/map.c
-    src/utils/pairs.c
-    src/lua_api.c
-    src/lua_constant.c
-    src/lua_dump.c
-    src/lua_equal.c
-    src/lua_errno.c
-    src/lua_get_api_info.c
-    src/lua_int64.c
-    src/lua_json.c
-    src/lua_list.c
-    src/lua_map.c
-    src/lua_object.c
-    src/lua_sha256.c
-    src/lua_task.c)
+    src/__init__.c
+    src/dirname.c
+    src/dump_any.c
+    src/dump_hex.c
+    src/man.c
+    src/merge_line.c
+    src/split_line.c
+    src/strcasecmp.c)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -43,9 +31,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        ${LUA_LIBRARY}
-        libuv
-        cJSON::cJSON)
+        ${LUA_LIBRARIES})
 
 if (UNIX)
     target_link_libraries(${PROJECT_NAME}
