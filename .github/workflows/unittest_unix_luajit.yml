@@ -4,7 +4,7 @@ on: [push]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
   LUA_INCLUDE_DIR: /usr/include/luajit-2.1
   LUA_LIBRARIES: /usr/lib/x86_64-linux-gnu/libluajit-5.1.a
 
