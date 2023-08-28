@@ -18,7 +18,10 @@ static const infra_lua_api_t* s_api[] = {
 INFRA_API int luaopen_infra(lua_State* L)
 {
     size_t i;
+
+#if defined(luaL_checkversion)
     luaL_checkversion(L);
+#endif
 
     int sp = lua_gettop(L);
     lua_newtable(L); // sp+1
@@ -78,5 +81,48 @@ int fopen_s(FILE** pFile, const char* filename, const char* mode)
         return errno;
     }
     return 0;
+}
+#endif
+
+#if defined(lua_absindex)
+int infra_lua_absindex(lua_State* L, int idx)
+{
+	if (idx < 0 && idx > LUA_REGISTRYINDEX)
+	{
+		idx = lua_gettop(L) + idx + 1;
+	}
+    return idx;
+}
+#endif
+
+#if defined(luaL_len)
+lua_Integer infra_luaL_len(lua_State* L, int idx)
+{
+    return lua_objlen(L, idx);
+}
+#endif
+
+#if defined(lua_geti)
+int infra_lua_geti(lua_State* L, int idx, lua_Integer n)
+{
+    idx = lua_absindex(L, idx);
+
+    lua_pushinteger(L, n);
+    lua_gettable(L, idx);
+
+    return lua_type(L, -1);
+}
+#endif
+
+#if defined(lua_seti)
+void infra_lua_seti(lua_State* L, int idx, lua_Integer n)
+{
+    idx = lua_absindex(L, idx);
+    int sp = lua_gettop(L);
+
+    lua_pushinteger(L, n);
+    lua_insert(L, sp);
+
+    lua_settable(L, idx);
 }
 #endif

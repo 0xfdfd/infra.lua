@@ -1,4 +1,5 @@
 #include "__init__.h"
+#include <stdint.h>
 
 static char _mmc_ascii_to_char(unsigned char c)
 {

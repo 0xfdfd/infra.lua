@@ -169,6 +169,34 @@ int fopen_s(FILE** pFile, const char* filename, const char* mode);
  * @}
  */
 
+/**
+ * @brief Compat for Lua5.x
+ */
+
+#if LUA_VERSION_NUM <= 501
+#define lua_absindex(L, idx)    infra_lua_absindex(L, idx)
+int infra_lua_absindex(lua_State* L, int idx);
+#endif
+
+#if LUA_VERSION_NUM <= 501
+#define luaL_len(L, idx)        infra_luaL_len(L, idx)
+lua_Integer infra_luaL_len(lua_State* L, int idx);
+#endif
+
+#if LUA_VERSION_NUM <= 502
+#define lua_geti(L, idx, n)     infra_lua_geti(L, idx, n)
+int infra_lua_geti(lua_State* L, int idx, lua_Integer n);
+#endif
+
+#if LUA_VERSION_NUM <= 502
+#define lua_seti(L, idx, n)     infra_lua_seti(L, idx, n)
+void infra_lua_seti(lua_State* L, int idx, lua_Integer n);
+#endif
+
+/**
+ * @}
+ */
+
 #ifdef __cplusplus
 }
 #endif

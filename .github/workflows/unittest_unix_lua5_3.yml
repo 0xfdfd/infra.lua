@@ -1,4 +1,4 @@
-name: ci-unix-lua5.3
+name: unittest-unix-lua5.3
 
 on: [push]
 
