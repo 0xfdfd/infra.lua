@@ -33,12 +33,19 @@ static void _on_before_test(const char* fixture, const char* test_name)
 {
     (void)fixture; (void)test_name;
     _close_lua_ctx();
+
     g_test_ctx.L = luaL_newstate();
+    assert(g_test_ctx.L != NULL);
 }
 
 static void _on_after_test(const char* fixture, const char* test_name, int ret)
 {
     (void)fixture; (void)test_name; (void)ret;
+    _close_lua_ctx();
+}
+
+static void _on_after_all_test(void)
+{
     _close_lua_ctx();
 }
 
@@ -272,6 +279,7 @@ int main(int argc, char* argv[])
 
     hook.before_test = _on_before_test;
     hook.after_test = _on_after_test;
+    hook.after_all_test = _on_after_all_test;
 
     return cutest_run_tests(argc, argv, stdout, &hook);
 }
