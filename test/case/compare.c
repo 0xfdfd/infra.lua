@@ -22,12 +22,11 @@ LF
 "ds[" STRINGIFY(__LINE__) "] = { 1, \"hello\", -1 }" LF
 LF
 "-- Let's do all the tests" LF
+"local file_path = [[" __FILE__ "]]" LF
 "for k,v in pairs(ds) do" LF
-"    local file_path = [[" __FILE__ "]]" LF
-"    test.assert_eq(" LF
-"        infra.compare(v[1], v[2])," LF
-"        v[3]," LF
-"        \"locate at %s:%d\", file_path, k)" LF
+"    local ret = infra.compare(v[1], v[2])" LF
+"    test.assert_eq(ret, v[3]," LF
+"        \"test case at %s:%d\", file_path, k)" LF
 "end" LF
 ;
 
