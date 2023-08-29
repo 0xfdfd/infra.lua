@@ -6,6 +6,7 @@
  * @brief Infra API.
  */
 static const infra_lua_api_t* s_api[] = {
+    &infra_f_basename,
     &infra_f_compare,
     &infra_f_dirname,
     &infra_f_dump_any,

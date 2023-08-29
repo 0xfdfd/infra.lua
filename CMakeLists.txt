@@ -13,6 +13,7 @@ find_package(Lua REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/__init__.c
+    src/basename.c
     src/compare.c
     src/dirname.c
     src/dump_any.c
