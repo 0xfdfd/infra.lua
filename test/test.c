@@ -80,29 +80,49 @@ custom_compare:
 
 static int _assert_eq(lua_State* L)
 {
+    int sp = lua_gettop(L);
+
     lua_pushcfunction(L, _is_eq);
     lua_pushvalue(L, 1);
     lua_pushvalue(L, 2);
-    lua_call(L, 2, 1);
+    lua_call(L, 2, 1); // sp+1
 
     if (lua_toboolean(L, -1))
     {
         return 0;
     }
-    lua_settop(L, 2);
+    lua_pop(L, 1);
 
-    /* sp:3 */
+    /* sp+1 */
     lua_getglobal(L, "tostring");
     lua_pushvalue(L, 1);
     lua_call(L, 1, 1);
 
-    /* sp:3 */
+    /* sp+2 */
     lua_getglobal(L, "tostring");
     lua_pushvalue(L, 2);
     lua_call(L, 1, 1);
 
-    lua_pushfstring(L, "Assertion failed: `%s` == `%s`.",
-        lua_tostring(L, 3), lua_tostring(L, 4));
+    /* sp+3 */
+    if (sp >= 3)
+    {
+		lua_getglobal(L, "string");
+		lua_getfield(L, -1, "format");
+		lua_remove(L, sp + 3);
+        int i = 3;
+        for (; i <= sp; i++)
+        {
+            lua_pushvalue(L, i);
+        }
+        lua_call(L, sp - 2, 1);
+    }
+    else
+    {
+        lua_pushstring(L, "");
+    }
+
+    lua_pushfstring(L, "Assertion failed: %s: `%s` == `%s`.",
+        lua_tostring(L, sp + 3), lua_tostring(L, sp + 1), lua_tostring(L, sp + 2));
     return lua_error(L);
 }
 

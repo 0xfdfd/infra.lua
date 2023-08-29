@@ -1,5 +1,6 @@
 
 add_executable(infra_test
+    case/compare.c
     case/dirname.c
     case/man.c
     case/merge_line.c
