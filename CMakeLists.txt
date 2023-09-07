@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME}
     src/dump_hex.c
     src/man.c
     src/merge_line.c
+    src/readdir.c
     src/split_line.c
     src/strcasecmp.c)
 

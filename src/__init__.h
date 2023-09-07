@@ -110,6 +110,7 @@ extern const infra_lua_api_t infra_f_dump_any;
 extern const infra_lua_api_t infra_f_dump_hex;
 extern const infra_lua_api_t infra_f_man;
 extern const infra_lua_api_t infra_f_merge_line;
+extern const infra_lua_api_t infra_f_readdir;
 extern const infra_lua_api_t infra_f_split_line;
 extern const infra_lua_api_t infra_f_strcasecmp;
 /**

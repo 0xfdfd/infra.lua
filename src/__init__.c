@@ -13,6 +13,7 @@ static const infra_lua_api_t* s_api[] = {
     &infra_f_dump_hex,
     &infra_f_man,
     &infra_f_merge_line,
+    &infra_f_readdir,
     &infra_f_split_line,
     &infra_f_strcasecmp,
 };
