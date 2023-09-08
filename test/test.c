@@ -29,19 +29,14 @@ static void _close_lua_ctx(void)
     }
 }
 
-static void _on_before_test(const char* fixture, const char* test_name)
+static void _on_before_all_test(int argc, char* argv[])
 {
-    (void)fixture; (void)test_name;
+    (void)argc; (void)argv;
+
     _close_lua_ctx();
 
     g_test_ctx.L = luaL_newstate();
     assert(g_test_ctx.L != NULL);
-}
-
-static void _on_after_test(const char* fixture, const char* test_name, int ret)
-{
-    (void)fixture; (void)test_name; (void)ret;
-    _close_lua_ctx();
 }
 
 static void _on_after_all_test(void)
@@ -113,9 +108,9 @@ static int _assert_eq(lua_State* L)
     /* sp+3 */
     if (sp >= 3)
     {
-		lua_getglobal(L, "string");
-		lua_getfield(L, -1, "format");
-		lua_remove(L, sp + 3);
+        lua_getglobal(L, "string");
+        lua_getfield(L, -1, "format");
+        lua_remove(L, sp + 3);
         int i = 3;
         for (; i <= sp; i++)
         {
@@ -277,8 +272,7 @@ int main(int argc, char* argv[])
     static cutest_hook_t hook;
     memset(&hook, 0, sizeof(hook));
 
-    hook.before_test = _on_before_test;
-    hook.after_test = _on_after_test;
+    hook.before_all_test = _on_before_all_test;
     hook.after_all_test = _on_after_all_test;
 
     return cutest_run_tests(argc, argv, stdout, &hook);
