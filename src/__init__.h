@@ -109,6 +109,7 @@ extern const infra_lua_api_t infra_f_dirname;
 extern const infra_lua_api_t infra_f_dump_any;
 extern const infra_lua_api_t infra_f_dump_hex;
 extern const infra_lua_api_t infra_f_man;
+extern const infra_lua_api_t infra_f_map;
 extern const infra_lua_api_t infra_f_merge_line;
 extern const infra_lua_api_t infra_f_readdir;
 extern const infra_lua_api_t infra_f_split_line;
@@ -177,23 +178,39 @@ int fopen_s(FILE** pFile, const char* filename, const char* mode);
  */
 
 #if LUA_VERSION_NUM <= 501
-#define lua_absindex(L, idx)    infra_lua_absindex(L, idx)
+#define INFRA_NEED_LUA_ABSINDEX
+#define lua_absindex(L, idx)        infra_lua_absindex(L, idx)
 int infra_lua_absindex(lua_State* L, int idx);
 #endif
 
 #if LUA_VERSION_NUM <= 501
-#define luaL_len(L, idx)        infra_luaL_len(L, idx)
+#define INFRA_NEED_LUAL_LEN
+#define luaL_len(L, idx)            infra_luaL_len(L, idx)
 lua_Integer infra_luaL_len(lua_State* L, int idx);
 #endif
 
 #if LUA_VERSION_NUM <= 502
-#define lua_geti(L, idx, n)     infra_lua_geti(L, idx, n)
+#define INFRA_NEED_LUA_GETI
+#define lua_geti(L, idx, n)         infra_lua_geti(L, idx, n)
 int infra_lua_geti(lua_State* L, int idx, lua_Integer n);
 #endif
 
 #if LUA_VERSION_NUM <= 502
-#define lua_seti(L, idx, n)     infra_lua_seti(L, idx, n)
+#define INFRA_NEED_LUA_SETI
+#define lua_seti(L, idx, n)         infra_lua_seti(L, idx, n)
 void infra_lua_seti(lua_State* L, int idx, lua_Integer n);
+#endif
+
+#if LUA_VERSION_NUM <= 501
+#define INFRA_NEED_LUAL_SETFUNCS
+#define luaL_setfuncs(L, l, nup)    infra_luaL_setfuncs(L, l, nup)
+void infra_luaL_setfuncs(lua_State* L, const luaL_Reg* l, int nup);
+#endif
+
+#if !defined(luaL_newlib) && LUA_VERSION_NUM <= 501
+#define INFRA_NEED_LUAL_NEWLIB
+#define luaL_newlib(L, l)           infra_luaL_newlib(L, l)
+void infra_luaL_newlib(lua_State* L, const luaL_Reg l[]);
 #endif
 
 /**

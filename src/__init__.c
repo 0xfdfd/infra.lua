@@ -12,6 +12,7 @@ static const infra_lua_api_t* s_api[] = {
     &infra_f_dump_any,
     &infra_f_dump_hex,
     &infra_f_man,
+    &infra_f_map,
     &infra_f_merge_line,
     &infra_f_readdir,
     &infra_f_split_line,
@@ -87,7 +88,7 @@ int fopen_s(FILE** pFile, const char* filename, const char* mode)
 }
 #endif
 
-#if defined(lua_absindex)
+#if defined(INFRA_NEED_LUA_ABSINDEX)
 int infra_lua_absindex(lua_State* L, int idx)
 {
 	if (idx < 0 && idx > LUA_REGISTRYINDEX)
@@ -98,14 +99,14 @@ int infra_lua_absindex(lua_State* L, int idx)
 }
 #endif
 
-#if defined(luaL_len)
+#if defined(INFRA_NEED_LUAL_LEN)
 lua_Integer infra_luaL_len(lua_State* L, int idx)
 {
     return lua_objlen(L, idx);
 }
 #endif
 
-#if defined(lua_geti)
+#if defined(INFRA_NEED_LUA_GETI)
 int infra_lua_geti(lua_State* L, int idx, lua_Integer n)
 {
     idx = lua_absindex(L, idx);
@@ -117,7 +118,7 @@ int infra_lua_geti(lua_State* L, int idx, lua_Integer n)
 }
 #endif
 
-#if defined(lua_seti)
+#if defined(INFRA_NEED_LUA_SETI)
 void infra_lua_seti(lua_State* L, int idx, lua_Integer n)
 {
     idx = lua_absindex(L, idx);
@@ -127,5 +128,38 @@ void infra_lua_seti(lua_State* L, int idx, lua_Integer n)
     lua_insert(L, sp);
 
     lua_settable(L, idx);
+}
+#endif
+
+#if defined(INFRA_NEED_LUAL_SETFUNCS)
+void infra_luaL_setfuncs(lua_State* L, const luaL_Reg* l, int nup)
+{
+    for (; l->name != NULL; l++)
+    {
+        if (l->func == NULL)
+        {
+            lua_pushboolean(L, 0);
+        }
+        else
+        {
+            int i;
+            for (i = 0; i < nup; i++)
+            {
+                lua_pushvalue(L, -nup);
+            }
+            lua_pushcclosure(L, l->func, nup);
+        }
+        lua_setfield(L, -(nup + 2), l->name);
+    }
+
+    lua_pop(L, nup);
+}
+#endif
+
+#if defined(INFRA_NEED_LUAL_NEWLIB)
+void infra_luaL_newlib(lua_State* L, const luaL_Reg l[])
+{
+    lua_newtable(L);
+    luaL_setfuncs(L, l, 0);
 }
 #endif

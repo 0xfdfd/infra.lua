@@ -12,6 +12,7 @@ endfunction()
 find_package(Lua REQUIRED)
 
 add_library(${PROJECT_NAME}
+    src/utils/map.c
     src/__init__.c
     src/basename.c
     src/compare.c
@@ -19,6 +20,7 @@ add_library(${PROJECT_NAME}
     src/dump_any.c
     src/dump_hex.c
     src/man.c
+    src/map.c
     src/merge_line.c
     src/readdir.c
     src/split_line.c
