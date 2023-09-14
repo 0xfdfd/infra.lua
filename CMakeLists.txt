@@ -27,8 +27,10 @@ add_library(${PROJECT_NAME}
     src/map.c
     src/merge_line.c
     src/readdir.c
+    src/readfile.c
     src/split_line.c
-    src/strcasecmp.c)
+    src/strcasecmp.c
+    src/writefile.c)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC

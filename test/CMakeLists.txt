@@ -11,7 +11,9 @@ add_executable(infra_test
     case/map.c
     case/merge_line.c
     case/readdir.c
+    case/readfile.c
     case/strcasecmp.c
+    case/writefile.c
     cutest.c
     test.c)
 

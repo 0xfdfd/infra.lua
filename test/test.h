@@ -30,6 +30,8 @@ void test_run_script(const char* name, const char* script);
 }
 #endif
 
+#define TEST_ALIGN_LINE     TEST_REPLAT(LF, __LINE__)
+
 #define TEST_REPLAT(s, x)   TEST_REPLAT_(s, x)
 #define TEST_REPLAT_(s, x)  TEST_REPLAT_##x(s)
 

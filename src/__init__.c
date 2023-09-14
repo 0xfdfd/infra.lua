@@ -17,8 +17,10 @@ static const infra_lua_api_t* s_api[] = {
     &infra_f_map,
     &infra_f_merge_line,
     &infra_f_readdir,
+    &infra_f_readfile,
     &infra_f_split_line,
     &infra_f_strcasecmp,
+    &infra_f_writefile,
 };
 
 INFRA_API int luaopen_infra(lua_State* L)
