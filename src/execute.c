@@ -262,18 +262,23 @@ static int _infra_execute_exec(lua_State* L, infra_execute_t* self)
 
 static int _infra_execute_exchange_handle_stdin(infra_execute_t* self)
 {
-    if (self->input_sz > 0 && self->pip_stdin[1] != INFRA_OS_PIPE_INVALID)
+    while (self->input_sz > 0 && self->pip_stdin[1] != INFRA_OS_PIPE_INVALID)
     {
         ssize_t write_sz = infra_pipe_write(self->pip_stdin[1], self->input, self->input_sz);
         if (write_sz < 0)
         {
             return (int)write_sz;
         }
+        else if (write_sz == 0)
+        {
+            break;
+        }
 
         self->input_sz -= write_sz;
         self->input += write_sz;
     }
-    else if (self->pip_stdin[1] != INFRA_OS_PIPE_INVALID)
+
+    if (self->input_sz == 0 && self->pip_stdin[1] != INFRA_OS_PIPE_INVALID)
     {
         infra_pipe_close(self->pip_stdin[1]);
         self->pip_stdin[1] = INFRA_OS_PIPE_INVALID;
@@ -285,7 +290,7 @@ static int _infra_execute_exchange_handle_stdin(infra_execute_t* self)
 static int _infra_execute_handle_stdout(lua_State* L, infra_execute_t* self, void* buf, size_t buf_sz, int idx_stdout)
 {
     ssize_t ret;
-    if (self->pip_stdout[0] != INFRA_OS_PIPE_INVALID)
+    while (self->pip_stdout[0] != INFRA_OS_PIPE_INVALID)
     {
         ret = infra_pipe_read(self->pip_stdout[0], buf, buf_sz);
         if (ret > 0)
@@ -298,7 +303,7 @@ static int _infra_execute_handle_stdout(lua_State* L, infra_execute_t* self, voi
         /* No data received, try again. */
         else if (ret == 0)
         {
-            // do nothing.
+            break;
         }
         /* Read failed, Get errno and check pipe status */
         else if (ret == INFRA_EOF)
@@ -318,7 +323,7 @@ static int _infra_execute_handle_stdout(lua_State* L, infra_execute_t* self, voi
 static int _infra_execute_handle_stderr(lua_State* L, infra_execute_t* self, void* buf, size_t buf_sz, int idx_stderr)
 {
     ssize_t ret;
-    if (self->pip_stderr[1] != INFRA_OS_PIPE_INVALID)
+    while (self->pip_stderr[0] != INFRA_OS_PIPE_INVALID)
     {
         ret = infra_pipe_read(self->pip_stderr[0], buf, buf_sz);
         if (ret > 0)
@@ -331,7 +336,7 @@ static int _infra_execute_handle_stderr(lua_State* L, infra_execute_t* self, voi
         /* No data received, try again. */
         else if (ret == 0)
         {
-            // do nothing
+            break;
         }
         /* Read failed, Get errno and check pipe status */
         else if (ret == INFRA_EOF)

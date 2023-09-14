@@ -40,6 +40,17 @@ static void _echo_server(void)
     }
 }
 
+static void _echo_stderr_server(void)
+{
+    char buf[1024];
+
+    while (!feof(stdin))
+    {
+        size_t read_sz = fread(buf, 1, sizeof(buf), stdin);
+        fwrite(buf, 1, read_sz, stderr);
+    }
+}
+
 static void _on_before_all_test(int argc, char* argv[])
 {
     _close_lua_ctx();
@@ -53,6 +64,12 @@ static void _on_before_all_test(int argc, char* argv[])
         if (strcmp(argv[i], "--echo-server") == 0)
         {
             _echo_server();
+            exit(EXIT_SUCCESS);
+        }
+
+        if (strcmp(argv[i], "--echo-stderr-server") == 0)
+        {
+            _echo_stderr_server();
             exit(EXIT_SUCCESS);
         }
     }
