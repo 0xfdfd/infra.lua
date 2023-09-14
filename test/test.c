@@ -29,14 +29,33 @@ static void _close_lua_ctx(void)
     }
 }
 
+static void _echo_server(void)
+{
+    char buf[1024];
+
+    while (!feof(stdin))
+    {
+        size_t read_sz = fread(buf, 1, sizeof(buf), stdin);
+        fwrite(buf, 1, read_sz, stdout);
+    }
+}
+
 static void _on_before_all_test(int argc, char* argv[])
 {
-    (void)argc; (void)argv;
-
     _close_lua_ctx();
 
     g_test_ctx.L = luaL_newstate();
     assert(g_test_ctx.L != NULL);
+
+    int i;
+    for (i = 0; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--echo-server") == 0)
+        {
+            _echo_server();
+            exit(EXIT_SUCCESS);
+        }
+    }
 }
 
 static void _on_after_all_test(void)
@@ -269,6 +288,10 @@ void test_run_script(const char* name, const char* script)
 
 int main(int argc, char* argv[])
 {
+#if defined(_WIN32)
+    SetConsoleOutputCP(65001);
+#endif
+
     static cutest_hook_t hook;
     memset(&hook, 0, sizeof(hook));
 

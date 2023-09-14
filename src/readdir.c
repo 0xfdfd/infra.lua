@@ -5,45 +5,10 @@
 #include <Windows.h>
 #include <assert.h>
 
-static WCHAR* _infra_utf8_to_wide(const char* str)
-{
-    int multi_byte_sz = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    size_t buf_sz = multi_byte_sz * sizeof(WCHAR);
-
-    WCHAR* buf = (WCHAR*)malloc(buf_sz);
-    int ret = MultiByteToWideChar(CP_UTF8, 0, str, -1, (WCHAR*)buf, multi_byte_sz);
-    assert(ret == multi_byte_sz);
-
-    return buf;
-}
-
-static char* _infra_wide_to_utf8(const WCHAR* str)
-{
-    int utf8_sz = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
-    char* utf8 = malloc(utf8_sz + 1);
-    if (utf8 == NULL)
-    {
-        return NULL;
-    }
-
-    int ret = WideCharToMultiByte(CP_UTF8, 0, str, -1, utf8, utf8_sz, NULL, NULL);
-    assert(ret == utf8_sz);
-    utf8[utf8_sz] = '\0';
-
-    return utf8;
-}
-
 static int _infra_readdir_raise_error(lua_State* L, DWORD errcode)
 {
-    wchar_t buf[256];
-    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, errcode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        buf, (sizeof(buf) / sizeof(wchar_t)), NULL);
-
-    char* msg = _infra_wide_to_utf8(buf);
-    lua_pushstring(L, msg);
-    free(msg);
-
+    int new_errcode = infra_translate_sys_error(errcode);
+    infra_push_error(L, new_errcode);
     return lua_error(L);
 }
 
@@ -63,7 +28,7 @@ static int _infra_readdir(lua_State* L)
     lua_pushstring(L, "/*");
     lua_concat(L, 2);
 
-    WCHAR* wpath = _infra_utf8_to_wide(lua_tostring(L, 1));
+    WCHAR* wpath = infra_utf8_to_wide(lua_tostring(L, 1));
 
     WIN32_FIND_DATAW FindFileData;
     HANDLE hFile = FindFirstFileW(wpath, &FindFileData);
@@ -89,7 +54,7 @@ static int _infra_readdir(lua_State* L)
         lua_pushstring(L, _infra_file_type(FindFileData.dwFileAttributes));
         lua_setfield(L, -2, "type");
 
-        char* name = _infra_wide_to_utf8(FindFileData.cFileName);
+        char* name = infra_wide_to_utf8(FindFileData.cFileName);
         lua_setfield(L, -2, name);
         free(name);
 
@@ -103,7 +68,6 @@ static int _infra_readdir(lua_State* L)
 
 #include <sys/types.h>
 #include <dirent.h>
-#include <errno.h>
 
 static const char* _infra_file_type(int type)
 {

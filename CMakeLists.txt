@@ -12,13 +12,17 @@ endfunction()
 find_package(Lua REQUIRED)
 
 add_library(${PROJECT_NAME}
+    src/utils/exec.c
     src/utils/map.c
+    src/utils/pipe.c
     src/__init__.c
     src/basename.c
     src/compare.c
     src/dirname.c
     src/dump_any.c
     src/dump_hex.c
+    src/execute.c
+    src/exepath.c
     src/man.c
     src/map.c
     src/merge_line.c

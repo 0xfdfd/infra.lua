@@ -7,48 +7,12 @@
 
 #define INFRA_LUA_EXPOSE_SYMBOLS
 #include <infra.lua.h>
+#include <stdint.h>
+#include "utils/defs.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // MACROS
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Get the number of element in array.
- * @param[in] a Array.
- * @return      Element count.
- */
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
-
-/**
- * @brief Default as local API.
- *
- * On gcc/clang, non-static C function are export by default. However most of
- * library function should not be exported.
- *
- * Use this macro to ensure these functions is hidden for user.
- */
-#if (defined(__GNUC__) || defined(__clang__)) && !defined(_WIN32)
-#   define API_LOCAL    __attribute__((visibility ("hidden")))
-#else
-#   define API_LOCAL
-#endif
-
-#if !defined(offsetof)
-#   define offsetof(s,m) ((size_t)&(((s*)0)->m))
-#endif
-
-#if !defined(container_of)
-#   if defined(__GNUC__) || defined(__clang__)
-#       define container_of(ptr, type, member)   \
-            ({ \
-                const typeof(((type *)0)->member)*__mptr = (ptr); \
-                (type *)((char *)__mptr - offsetof(type, member)); \
-            })
-#   else
-#       define container_of(ptr, type, member)   \
-            ((type *) ((char *) (ptr) - offsetof(type, member)))
-#   endif
-#endif
 
 #define CHECK_OOM(L, X) \
     if (NULL == (X)) {\
@@ -69,6 +33,10 @@
 // Application Programming Interface
 ///////////////////////////////////////////////////////////////////////////////
 
+#if defined(_WIN32)
+#include <Windows.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -80,15 +48,6 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-/**
- * @brief Initialize callback.
- * @warning Do not break stack balance.
- * @param[in] L     Host Lua VM.
- * @param[out] addr Function address.
- * @return          The number of upvalue.
- */
-typedef int (*infra_api_init_fn)(lua_State* L, lua_CFunction* addr);
 
 typedef struct infra_lua_api
 {
@@ -108,6 +67,8 @@ extern const infra_lua_api_t infra_f_compare;
 extern const infra_lua_api_t infra_f_dirname;
 extern const infra_lua_api_t infra_f_dump_any;
 extern const infra_lua_api_t infra_f_dump_hex;
+extern const infra_lua_api_t infra_f_execute;
+extern const infra_lua_api_t infra_f_exepath;
 extern const infra_lua_api_t infra_f_man;
 extern const infra_lua_api_t infra_f_map;
 extern const infra_lua_api_t infra_f_merge_line;
@@ -145,6 +106,27 @@ API_LOCAL void lua_api_foreach(lua_api_foreach_fn cb, void* arg);
 API_LOCAL int infra_typeerror(lua_State* L, int arg, const char *tname);
 
 /**
+ * @brief Make a tempory buffer on top of Lua stack.
+ * @param[in] L     Lua VM.
+ * @param[in] size  Buffer size.
+ * @return          Buffer address. It always align to twice of machine size.
+ */
+API_LOCAL void* infra_tmpbuf(lua_State* L, size_t size);
+
+/**
+ * @brief Translate system error to standard error.
+ * @param[in] errcode   For windows, it must comes from GetLastError(). For unix, it must comes from errno.
+ */
+API_LOCAL int infra_translate_sys_error(int errcode);
+
+/**
+ * @brief Push error string on top of stack \p L.
+ * @param[in] L     Lua VM.
+ * @param[in] errcode   The error code from GetLastError().
+ */
+API_LOCAL void infra_push_error(lua_State* L, int errcode);
+
+/**
  * @brief Compat for Windows and Unix
  * @{
  */
@@ -154,6 +136,37 @@ API_LOCAL int infra_typeerror(lua_State* L, int arg, const char *tname);
 #define strerror_r(errcode, buf, len)   strerror_s(buf,len, errcode)
 #define strdup(s)                       _strdup(s)
 #define strcasecmp(s1, s2)              _stricmp(s1, s2)
+
+/**
+ * @brief Maps a UTF-16 (wide character) string to a new character string.
+ * @param[in] str   Wide character string.
+ * @return          UTF-8 string. Do remember to free() it.
+ */
+API_LOCAL char* infra_wide_to_utf8(const WCHAR* str);
+
+/**
+ * @brief Maps a UTF-16 (wide character) string to a new character string.
+ * @param[in] str   Wide character string.
+ * @return          UTF-8 string. Don't free() it, as Lua take care of
+ *                  the life cycle.
+ */
+API_LOCAL char* infra_lua_wide_to_utf8(lua_State* L, const WCHAR* str);
+
+/**
+ * @brief Maps a character string to a UTF-16 (wide character) string.
+ * @param[in] str   UTF-8 string.
+ * @return          Wide character string. Do remember to free() it.
+ */
+API_LOCAL WCHAR* infra_utf8_to_wide(const char* str);
+
+/**
+ * @brief Maps a character string to a UTF-16 (wide character) string, push the
+ *   result on top of stack, and return it's address.
+ * @param[in] str   UTF-8 string.
+ * @return          Wide character string. Don't free() it, as Lua take care of
+ *                  the life cycle.
+ */
+API_LOCAL WCHAR* infra_lua_utf8_to_wide(lua_State* L, const char* str);
 
 #else
 
@@ -166,7 +179,7 @@ API_LOCAL int infra_typeerror(lua_State* L, int arg, const char *tname);
  * @param[in] mode      Type of access permitted.
  * @return              Zero if successful; an error code on failure.
  */
-int fopen_s(FILE** pFile, const char* filename, const char* mode);
+API_LOCAL int fopen_s(FILE** pFile, const char* filename, const char* mode);
 
 #endif
 /**
@@ -187,6 +200,12 @@ int infra_lua_absindex(lua_State* L, int idx);
 #define INFRA_NEED_LUAL_LEN
 #define luaL_len(L, idx)            infra_luaL_len(L, idx)
 lua_Integer infra_luaL_len(lua_State* L, int idx);
+#endif
+
+#if LUA_VERSION_NUM <= 502
+#define INFRA_NEED_LUA_GETFIELD
+#define lua_getfield(L, idx, k)     infra_lua_getfield(L, idx, k)
+int infra_lua_getfield(lua_State* L, int idx, const char* k);
 #endif
 
 #if LUA_VERSION_NUM <= 502

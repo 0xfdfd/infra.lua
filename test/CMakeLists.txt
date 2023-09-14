@@ -5,6 +5,8 @@ add_executable(infra_test
     case/dirname.c
     case/dump_any.c
     case/dump_hex.c
+    case/execute.c
+    case/exepath.c
     case/man.c
     case/map.c
     case/merge_line.c
