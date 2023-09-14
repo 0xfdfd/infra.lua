@@ -64,6 +64,7 @@ typedef struct infra_lua_api
  */
 extern const infra_lua_api_t infra_f_basename;
 extern const infra_lua_api_t infra_f_compare;
+extern const infra_lua_api_t infra_f_cwd;
 extern const infra_lua_api_t infra_f_dirname;
 extern const infra_lua_api_t infra_f_dump_any;
 extern const infra_lua_api_t infra_f_dump_hex;

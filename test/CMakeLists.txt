@@ -2,6 +2,7 @@
 add_executable(infra_test
     case/basename.c
     case/compare.c
+    case/cwd.c
     case/dirname.c
     case/dump_any.c
     case/dump_hex.c
