@@ -12,6 +12,11 @@
         test_run_script(#name, script);\
     }
 
+#define INFRA_TEST_DISABLED(name, script)   \
+    TEST(infra, DISABLED_##name) {\
+        test_run_script(#name, script);\
+    }
+
 #define LF  "\n"
 #define STRINGIFY(x)    STRINGIFY2(x)
 #define STRINGIFY2(x)   #x

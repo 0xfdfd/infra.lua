@@ -1,5 +1,12 @@
 
 add_executable(infra_test
+    case/argparser_action.c
+    case/argparser_choices.c
+    case/argparser_format_help.c
+    case/argparser_longopt.c
+    case/argparser_narg.c
+    case/argparser_shortopt.c
+    case/argparser_type.c
     case/basename.c
     case/compare.c
     case/cwd.c

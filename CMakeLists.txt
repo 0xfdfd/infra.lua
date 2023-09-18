@@ -13,9 +13,11 @@ find_package(Lua REQUIRED)
 
 add_library(${PROJECT_NAME}
     src/utils/exec.c
+    src/utils/list.c
     src/utils/map.c
     src/utils/pipe.c
     src/__init__.c
+    src/argparser.c
     src/basename.c
     src/compare.c
     src/cwd.c

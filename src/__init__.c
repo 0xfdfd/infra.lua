@@ -6,6 +6,7 @@
  * @brief Infra API.
  */
 static const infra_lua_api_t* s_api[] = {
+    &infra_f_argparser,
     &infra_f_basename,
     &infra_f_compare,
     &infra_f_cwd,
@@ -235,6 +236,14 @@ int infra_lua_getfield(lua_State* L, int idx, const char* k)
 }
 #endif
 
+#if defined(INFRA_NEED_LUA_GETTABLE)
+int infra_lua_gettable(lua_State* L, int idx)
+{
+    (lua_gettable)(L, idx);
+    return lua_type(L, -1);
+}
+#endif
+
 #if defined(INFRA_NEED_LUA_GETI)
 int infra_lua_geti(lua_State* L, int idx, lua_Integer n)
 {
@@ -282,6 +291,37 @@ void infra_luaL_setfuncs(lua_State* L, const luaL_Reg* l, int nup)
     }
 
     lua_pop(L, nup);
+}
+#endif
+
+#if defined(INFRA_NEED_LUA_TONUMBERX)
+lua_Number infra_lua_tonumberx(lua_State* L, int idx, int* isnum)
+{
+    int tmp_isnum;
+    if (isnum == NULL)
+    {
+        isnum = &tmp_isnum;
+    }
+
+    int ret;
+    if ((ret = lua_type(L, idx)) == LUA_TNUMBER)
+    {
+        *isnum = 1;
+        return lua_tonumber(L, idx);
+    }
+    else if (ret == LUA_TSTRING)
+    {
+        const char* s = lua_tostring(L, idx);
+        double v = 0;
+        if (sscanf(s, "%lf", &v) == 1)
+        {
+            *isnum = 1;
+            return v;
+        }
+    }
+
+    *isnum = 0;
+    return 0;
 }
 #endif
 

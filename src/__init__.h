@@ -14,9 +14,11 @@
 // MACROS
 ///////////////////////////////////////////////////////////////////////////////
 
-#define CHECK_OOM(L, X) \
+#define INFRA_LUA_ERRMSG_OOM   "out of memory."
+
+#define INFRA_CHECK_OOM(L, X) \
     if (NULL == (X)) {\
-        return luaL_error(L, "out of memory");\
+        return luaL_error(L, INFRA_LUA_ERRMSG_OOM);\
     }
 
 /**
@@ -62,6 +64,7 @@ typedef struct infra_lua_api
  * @brief This is the list of builtin APIs.
  * @{
  */
+extern const infra_lua_api_t infra_f_argparser;
 extern const infra_lua_api_t infra_f_basename;
 extern const infra_lua_api_t infra_f_compare;
 extern const infra_lua_api_t infra_f_cwd;
@@ -139,6 +142,7 @@ API_LOCAL void infra_push_error(lua_State* L, int errcode);
 #define strerror_r(errcode, buf, len)   strerror_s(buf,len, errcode)
 #define strdup(s)                       _strdup(s)
 #define strcasecmp(s1, s2)              _stricmp(s1, s2)
+#define sscanf(b, f, ...)               sscanf_s(b, f, ##__VA_ARGS__)
 
 /**
  * @brief Maps a UTF-16 (wide character) string to a new character string.
@@ -195,38 +199,50 @@ API_LOCAL int fopen_s(FILE** pFile, const char* filename, const char* mode);
 
 #if LUA_VERSION_NUM <= 501
 #define INFRA_NEED_LUA_ABSINDEX
-#define lua_absindex(L, idx)        infra_lua_absindex(L, idx)
+#define lua_absindex(L, idx)            infra_lua_absindex(L, idx)
 int infra_lua_absindex(lua_State* L, int idx);
 #endif
 
 #if LUA_VERSION_NUM <= 501
 #define INFRA_NEED_LUAL_LEN
-#define luaL_len(L, idx)            infra_luaL_len(L, idx)
+#define luaL_len(L, idx)                infra_luaL_len(L, idx)
 lua_Integer infra_luaL_len(lua_State* L, int idx);
 #endif
 
 #if LUA_VERSION_NUM <= 502
 #define INFRA_NEED_LUA_GETFIELD
-#define lua_getfield(L, idx, k)     infra_lua_getfield(L, idx, k)
+#define lua_getfield(L, idx, k)         infra_lua_getfield(L, idx, k)
 int infra_lua_getfield(lua_State* L, int idx, const char* k);
 #endif
 
 #if LUA_VERSION_NUM <= 502
+#define INFRA_NEED_LUA_GETTABLE
+#define lua_gettable(L, idx)            infra_lua_gettable(L, idx)
+int infra_lua_gettable(lua_State* L, int idx);
+#endif
+
+#if LUA_VERSION_NUM <= 502
 #define INFRA_NEED_LUA_GETI
-#define lua_geti(L, idx, n)         infra_lua_geti(L, idx, n)
+#define lua_geti(L, idx, n)             infra_lua_geti(L, idx, n)
 int infra_lua_geti(lua_State* L, int idx, lua_Integer n);
 #endif
 
 #if LUA_VERSION_NUM <= 502
 #define INFRA_NEED_LUA_SETI
-#define lua_seti(L, idx, n)         infra_lua_seti(L, idx, n)
+#define lua_seti(L, idx, n)             infra_lua_seti(L, idx, n)
 void infra_lua_seti(lua_State* L, int idx, lua_Integer n);
 #endif
 
 #if LUA_VERSION_NUM <= 501
 #define INFRA_NEED_LUAL_SETFUNCS
-#define luaL_setfuncs(L, l, nup)    infra_luaL_setfuncs(L, l, nup)
+#define luaL_setfuncs(L, l, nup)        infra_luaL_setfuncs(L, l, nup)
 void infra_luaL_setfuncs(lua_State* L, const luaL_Reg* l, int nup);
+#endif
+
+#if LUA_VERSION_NUM <= 501
+#define INFRA_NEED_LUA_TONUMBERX
+#define lua_tonumberx(L, idx, isnum)    infra_lua_tonumberx(L, idx, isnum)
+lua_Number infra_lua_tonumberx(lua_State* L, int idx, int* isnum);
 #endif
 
 #if !defined(luaL_newlib) && LUA_VERSION_NUM <= 501
