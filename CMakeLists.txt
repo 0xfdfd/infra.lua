@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.2)
 project(infra)
 
+###############################################################################
+# Functions
+###############################################################################
 function(setup_target_wall name)
     if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(${name} PRIVATE /W4 /WX)
@@ -9,7 +12,9 @@ function(setup_target_wall name)
     endif ()
 endfunction()
 
-find_package(Lua REQUIRED)
+###############################################################################
+# Setup library
+###############################################################################
 
 add_library(${PROJECT_NAME}
     src/utils/exec.c
@@ -41,23 +46,44 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        ${LUA_INCLUDE_DIR}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        ${LUA_LIBRARIES})
+setup_target_wall(${PROJECT_NAME})
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")
 
+###############################################################################
+# Dependency
+###############################################################################
+
+# Lua
+find_package(Lua REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE ${LUA_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LUA_LIBRARIES})
+
+# System library
 if (UNIX)
     target_link_libraries(${PROJECT_NAME}
         PRIVATE
-            m)
+            m
+            rt)
 endif ()
 
-SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")
-setup_target_wall(${PROJECT_NAME})
+###############################################################################
+# Install
+###############################################################################
 
+install(TARGETS ${PROJECT_NAME}
+    EXPORT InfraTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)
+
+###############################################################################
+# Test
+###############################################################################
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
 endif()

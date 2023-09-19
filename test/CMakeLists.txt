@@ -35,10 +35,12 @@ target_include_directories(infra_test
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR})
 
+find_package(Threads REQUIRED)
 target_link_libraries(infra_test
     PRIVATE
         infra
-        ${LUA_LIBRARIES})
+        ${LUA_LIBRARIES}
+        Threads::Threads)
 
 setup_target_wall(infra_test)
 
