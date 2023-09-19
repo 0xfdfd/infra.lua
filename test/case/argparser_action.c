@@ -1,7 +1,7 @@
 #include "test.h"
 
 static const char* ut_argparser_action_script = TEST_ALIGN_LINE
-"local function action_sum(oldval, newval)" LF
+"local function action_sum(self, oldval, newval)" LF
 "    if oldval == nil then" LF
 "        return newval" LF
 "    end" LF
@@ -39,8 +39,8 @@ LF
 LF
 "local function test_c()" LF
 "    local args = {" LF
-"        \"-c\","
-"        \"-c\","
+"        \"-c\"," LF
+"        \"-c\"," LF
 "    }" LF
 "    local ret = argp:parse_args(args)" LF
 "    test.assert_eq(ret[\"-c\"], #args)" LF

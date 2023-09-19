@@ -49,6 +49,7 @@ typedef struct infra_argp_helper
     infra_argp_t*           self;
     infra_argp_opt_t*       opt;        /**< The current option processing. */
     int                     narg;       /**< The number of arguments to be save. */
+    int                     idx_argp;   /**< Index of argparser. */
     int                     idx_ret;    /**< Index of return value. */
 } infra_argp_helper_t;
 
@@ -177,22 +178,22 @@ static infra_argp_opt_t* _infra_argp_find_option(lua_State* L, infra_argp_t* sel
 
 static int _infra_argp_action_store(lua_State* L)
 {
-    lua_pushvalue(L, 2);
+    lua_pushvalue(L, 3);
     return 1;
 }
 
 static int _infra_argp_action_append(lua_State* L)
 {
-    if (lua_type(L, 1) != LUA_TTABLE)
+    if (lua_type(L, 2) != LUA_TTABLE)
     {
         lua_newtable(L);
     }
     else
     {
-        lua_pushvalue(L, 1);
+        lua_pushvalue(L, 2);
     }
 
-    lua_pushvalue(L, 2);
+    lua_pushvalue(L, 3);
     lua_seti(L, -2, luaL_len(L, -2) + 1);
 
     return 1;
@@ -201,13 +202,13 @@ static int _infra_argp_action_append(lua_State* L)
 static int _infra_argp_action_count(lua_State* L)
 {
     /* Update counter. */
-    if (lua_type(L, 1) != LUA_TNUMBER)
+    if (lua_type(L, 2) != LUA_TNUMBER)
     {
         lua_pushinteger(L, 1);
     }
     else
     {
-        lua_Integer n = lua_tointeger(L, 1);
+        lua_Integer n = lua_tointeger(L, 2);
         lua_pushinteger(L, n + 1);
     }
 
@@ -803,8 +804,8 @@ static int _infra_argp_check_args_valid(lua_State* L, infra_argp_t* self, int id
     return 0;
 }
 
-static int _infra_argp_handle_option(lua_State* L, int idx_ret,
-    infra_argp_opt_t* opt, int idx_val)
+static int _infra_argp_handle_option(lua_State* L, infra_argp_opt_t* opt,
+    int idx_argp, int idx_ret, int idx_val)
 {
     int sp = lua_gettop(L);
     idx_ret = lua_absindex(L, idx_ret);
@@ -835,9 +836,10 @@ static int _infra_argp_handle_option(lua_State* L, int idx_ret,
 
     /* Step 2. Generate captured value. */
     lua_rawgeti(L, LUA_REGISTRYINDEX, opt->f_action);
+    lua_pushvalue(L, idx_argp);
     lua_getfield(L, idx_ret, opt->names[0]);
     lua_pushvalue(L, sp + 1);
-    lua_call(L, 2, 1); // sp+2
+    lua_call(L, 3, 1); // sp+2
 
     /* Update storage. */
     size_t i;
@@ -857,7 +859,7 @@ static int _infra_argp_parse_args_remain(lua_State* L, infra_argp_helper_t* help
 {
     if (helper->narg > 0)
     {
-        _infra_argp_handle_option(L, helper->idx_ret, helper->opt, idx_val);
+        _infra_argp_handle_option(L, helper->opt, helper->idx_argp, helper->idx_ret, idx_val);
         helper->narg--;
         if (helper->narg == 0)
         {
@@ -871,13 +873,13 @@ static int _infra_argp_parse_args_remain(lua_State* L, infra_argp_helper_t* help
     }
     else if (helper->narg == -'?')
     {
-        _infra_argp_handle_option(L, helper->idx_ret, helper->opt, idx_val);
+        _infra_argp_handle_option(L, helper->opt, helper->idx_argp, helper->idx_ret, idx_val);
         helper->narg = 0;
         helper->opt = NULL;
     }
     else if (helper->narg == -'*' || helper->narg == -'+')
     {
-        _infra_argp_handle_option(L, helper->idx_ret, helper->opt, idx_val);
+        _infra_argp_handle_option(L, helper->opt, helper->idx_argp, helper->idx_ret, idx_val);
 
         /* if narg == -'+', check it at last. */
     }
@@ -898,7 +900,7 @@ static int _infra_argp_parse_args_onpass_multi(lua_State* L,
     if (helper->opt->c_narg == 0)
     {
         lua_pushnil(L);
-        _infra_argp_handle_option(L, helper->idx_ret, helper->opt, -1);
+        _infra_argp_handle_option(L, helper->opt, helper->idx_argp, helper->idx_ret, -1);
         lua_pop(L, 1);
 
         /* No need value, reset. */
@@ -1001,6 +1003,7 @@ static int _infra_argp_parse_args(lua_State* L)
     infra_argp_helper_t helper;
     memset(&helper, 0, sizeof(helper));
     helper.self = self;
+    helper.idx_argp = 1;
     helper.idx_ret = sp + 1;
 
     for (helper.pos_arg = 1; lua_geti(L, 2, helper.pos_arg) == LUA_TSTRING; helper.pos_arg++) // sp+2
@@ -1132,7 +1135,7 @@ const infra_lua_api_t infra_f_argparser = {
 "      + \"count\": This counts the number of times a keyword argument occurs.\n"
 "      + \"help\": This prints a complete help message for all the options in\n"
 "        the current parser and then exits.\n"
-"      + function: the protocol is `any (*)(any oldval, any newval)`.\n"
+"      + function: the protocol is `any (*)(self, any oldval, any newval)`.\n"
 "    + `type`: Automatically convert an argument to the given type. Accept\n"
 "      \"string\", \"number\", or a function that create object.\n"
 "    + `choices`: Array of limit values to a specific set of choices.\n"
