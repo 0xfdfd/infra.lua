@@ -29,6 +29,8 @@ add_library(${PROJECT_NAME}
     src/man.c
     src/map.c
     src/merge_line.c
+    src/pairs.c
+    src/range.c
     src/readdir.c
     src/readfile.c
     src/split_line.c

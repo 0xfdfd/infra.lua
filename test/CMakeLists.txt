@@ -18,6 +18,8 @@ add_executable(infra_test
     case/man.c
     case/map.c
     case/merge_line.c
+    case/pairs.c
+    case/range.c
     case/readdir.c
     case/readfile.c
     case/strcasecmp.c

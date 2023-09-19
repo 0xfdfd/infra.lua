@@ -76,6 +76,8 @@ extern const infra_lua_api_t infra_f_exepath;
 extern const infra_lua_api_t infra_f_man;
 extern const infra_lua_api_t infra_f_map;
 extern const infra_lua_api_t infra_f_merge_line;
+extern const infra_lua_api_t infra_f_pairs;
+extern const infra_lua_api_t infra_f_range;
 extern const infra_lua_api_t infra_f_readdir;
 extern const infra_lua_api_t infra_f_readfile;
 extern const infra_lua_api_t infra_f_split_line;

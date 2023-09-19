@@ -18,6 +18,8 @@ static const infra_lua_api_t* s_api[] = {
     &infra_f_man,
     &infra_f_map,
     &infra_f_merge_line,
+    &infra_f_pairs,
+    &infra_f_range,
     &infra_f_readdir,
     &infra_f_readfile,
     &infra_f_split_line,
