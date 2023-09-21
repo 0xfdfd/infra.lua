@@ -91,9 +91,21 @@ static int _infra_execute_meta_gc(lua_State* L)
 
     for (i = 0; i < ARRAY_SIZE(self->pip_stdin); i++)
     {
-        infra_pipe_close(self->pip_stdin[i]); self->pip_stdin[i] = INFRA_OS_PIPE_INVALID;
-        infra_pipe_close(self->pip_stdout[i]); self->pip_stdout[i] = INFRA_OS_PIPE_INVALID;
-        infra_pipe_close(self->pip_stderr[i]); self->pip_stderr[i] = INFRA_OS_PIPE_INVALID;
+        if (self->pip_stdin[i] != INFRA_OS_PIPE_INVALID)
+        {
+            infra_pipe_close(self->pip_stdin[i]);
+            self->pip_stdin[i] = INFRA_OS_PIPE_INVALID;
+        }
+        if (self->pip_stdout[i] != INFRA_OS_PIPE_INVALID)
+        {
+            infra_pipe_close(self->pip_stdout[i]);
+            self->pip_stdout[i] = INFRA_OS_PIPE_INVALID;
+        }
+        if (self->pip_stderr[i] != INFRA_OS_PIPE_INVALID)
+        {
+            infra_pipe_close(self->pip_stderr[i]);
+            self->pip_stderr[i] = INFRA_OS_PIPE_INVALID;
+        }
     }
 
     if (self->hProcess != INFRA_OS_PID_INVALID)
