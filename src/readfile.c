@@ -27,6 +27,7 @@ static int _infra_readfile(lua_State* L)
         lua_pushlstring(L, buf, read_sz);
         lua_concat(L, 2);
     }
+    fclose(file);
     
     return 1;
 }
