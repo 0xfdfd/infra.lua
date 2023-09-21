@@ -34,10 +34,12 @@ static int _infra_exepath(lua_State* L)
         int errcode = errno;
         errcode = infra_translate_sys_error(errcode);
         infra_push_error(L, errcode);
+        free(path);
         return lua_error(L);
     }
 
     lua_pushlstring(L, path, ret);
+    free(path);
 
 #endif
     return 1;
