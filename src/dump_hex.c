@@ -18,7 +18,7 @@ static void mmc_dump_hex(luaL_Buffer* buf, const void* data, size_t size, size_t
     size_t idx_line;
     for (idx_line = 0; idx_line < size; idx_line += width)
     {
-        snprintf(tmp, sizeof(tmp), "%p: ", (void*)(uintptr_t)idx_line);
+        snprintf(tmp, sizeof(tmp), "0x%08x: ", (unsigned)idx_line);
         luaL_addstring(buf, tmp);
 
         /* printf hex */
