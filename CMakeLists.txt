@@ -21,26 +21,27 @@ add_library(${PROJECT_NAME}
     src/utils/list.c
     src/utils/map.c
     src/utils/pipe.c
-    src/__init__.c
-    src/argparser.c
-    src/basename.c
-    src/compare.c
-    src/cwd.c
-    src/dirname.c
-    src/dump_any.c
-    src/dump_hex.c
-    src/execute.c
-    src/exepath.c
-    src/man.c
-    src/map.c
-    src/merge_line.c
-    src/pairs.c
-    src/range.c
-    src/readdir.c
-    src/readfile.c
-    src/split_line.c
-    src/strcasecmp.c
-    src/writefile.c)
+    src/function/__init__.c
+    src/function/argparser.c
+    src/function/basename.c
+    src/function/compare.c
+    src/function/cwd.c
+    src/function/dirname.c
+    src/function/dump_any.c
+    src/function/dump_hex.c
+    src/function/execute.c
+    src/function/exepath.c
+    src/function/man.c
+    src/function/map.c
+    src/function/merge_line.c
+    src/function/pairs.c
+    src/function/range.c
+    src/function/readdir.c
+    src/function/readfile.c
+    src/function/split_line.c
+    src/function/strcasecmp.c
+    src/function/writefile.c
+    src/infra.lua.c)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC

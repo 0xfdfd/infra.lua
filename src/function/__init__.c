@@ -27,35 +27,6 @@ static const infra_lua_api_t* s_api[] = {
     &infra_f_writefile,
 };
 
-INFRA_API int luaopen_infra(lua_State* L)
-{
-    size_t i;
-
-#if defined(luaL_checkversion)
-    luaL_checkversion(L);
-#endif
-
-    int sp = lua_gettop(L);
-    lua_newtable(L); // sp+1
-
-    for (i = 0; i < ARRAY_SIZE(s_api); i++)
-    {
-        if (s_api[i]->upvalue)
-        {
-            lua_pushvalue(L, sp + 1); // sp+2
-            lua_pushcclosure(L, s_api[i]->addr, 1); // sp+2
-        }
-        else
-        {
-            lua_pushcfunction(L, s_api[i]->addr); // sp+2
-        }
-
-        lua_setfield(L, -2, s_api[i]->name); // sp+1
-    }
-
-    return 1;
-}
-
 void lua_api_foreach(lua_api_foreach_fn cb, void* arg)
 {
     size_t i;
