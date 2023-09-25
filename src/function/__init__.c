@@ -3,6 +3,28 @@
 #include <assert.h>
 
 /**
+ * @brief Error code map for GetLastError()
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror
+ * @see https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes
+ */
+#define INFRA_SYS_ERRNO_WIN32_MAP(xx)   \
+    xx(WAIT_TIMEOUT,        INFRA_ETIMEDOUT)   \
+    xx(ERROR_BROKEN_PIPE,   INFRA_EOF)
+
+/**
+ * @brief Error code map for errno.
+ * @see https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes
+ */
+#define INFRA_SYS_ERRNO_POSIX_MAP(xx)   \
+    xx(ETIMEDOUT,           INFRA_ETIMEDOUT)
+
+typedef struct infra_errno_map
+{
+    int src;
+    int dst;
+} infra_errno_map_t;
+
+/**
  * @brief Infra API.
  */
 static const infra_lua_api_t* s_api[] = {
@@ -63,22 +85,33 @@ void* infra_tmpbuf(lua_State* L, size_t size)
     return (void*)ALIGN_SIZE(addr, alignment);
 }
 
-#if defined(_WIN32)
-
 int infra_translate_sys_error(int errcode)
 {
-    switch (errcode)
-    {
-    case 0:                 return 0;
-    case WAIT_TIMEOUT:      return INFRA_ETIMEDOUT;
-    case ERROR_BROKEN_PIPE: return INFRA_EOF;
+#define EXPAND_CODE_AS_ERRNO_MAP(a, b)  { a, b },
 
-    default:
-        break;
+    static infra_errno_map_t s_errno_map[] = {
+#if defined(_WIN32)
+        INFRA_SYS_ERRNO_WIN32_MAP(EXPAND_CODE_AS_ERRNO_MAP)
+#endif
+        INFRA_SYS_ERRNO_POSIX_MAP(EXPAND_CODE_AS_ERRNO_MAP)
+        { 0, 0 }, /* 0 is always success */
+    };
+
+    size_t i;
+    for (i = 0; i < ARRAY_SIZE(s_errno_map); i++)
+    {
+        if (errcode == s_errno_map[i].src)
+        {
+            return s_errno_map[i].dst;
+        }
     }
 
     abort();
+
+#undef EXPAND_CODE_AS_ERRNO_MAP
 }
+
+#if defined(_WIN32)
 
 char* infra_wide_to_utf8(const WCHAR* str)
 {
@@ -162,12 +195,6 @@ int fopen_s(FILE** pFile, const char* filename, const char* mode)
         return errno;
     }
     return 0;
-}
-
-int infra_translate_sys_error(int errcode)
-{
-    assert(errcode >= 0);
-    return -errcode;
 }
 
 void infra_push_error(lua_State* L, int errcode)
