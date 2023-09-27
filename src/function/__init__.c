@@ -127,25 +127,15 @@ WCHAR* infra_lua_utf8_to_wide(lua_State* L, const char* str)
     return (WCHAR*)lua_tostring(L, -1);
 }
 
-void infra_push_error(lua_State* L, int errcode)
-{
-    assert(errcode <= 0);
-    errcode = -errcode;
-
-    char buf[256];
-    strerror_s(buf, sizeof(buf), errcode);
-
-    lua_pushstring(L, buf);
-}
-
-#else
-
-void infra_push_error(lua_State* L, int errcode)
-{
-    assert(errcode <= 0);
-    errcode = -errcode;
-
-    lua_pushstring(L, strerror(errcode));
-}
-
 #endif
+
+void infra_push_error(lua_State* L, int errcode)
+{
+    lua_pushstring(L, infra_strerror(errcode));
+}
+
+int infra_raise_error(lua_State* L, int errcode)
+{
+    infra_push_error(L, errcode);
+    return lua_error(L);
+}

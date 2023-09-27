@@ -123,6 +123,8 @@ API_LOCAL void* infra_tmpbuf(lua_State* L, size_t size);
  */
 API_LOCAL void infra_push_error(lua_State* L, int errcode);
 
+API_LOCAL int infra_raise_error(lua_State* L, int errcode);
+
 /**
  * @brief Compat for Windows and Unix
  * @{

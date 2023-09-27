@@ -2,6 +2,7 @@
 #define __INFRA_UTILS_MAP_H__
 
 #include <stddef.h>
+#include "defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +72,7 @@ typedef struct ev_map
  * @param cmp       The compare function. Must not NULL
  * @param arg       User defined argument. Can be anything
  */
-void ev_map_init(ev_map_t* handler, ev_map_cmp_fn cmp, void* arg);
+API_LOCAL void ev_map_init(ev_map_t* handler, ev_map_cmp_fn cmp, void* arg);
 
 /**
  * @brief Insert the node into map.
@@ -80,7 +81,7 @@ void ev_map_init(ev_map_t* handler, ev_map_cmp_fn cmp, void* arg);
  * @param node      The node
  * @return          NULL if success, otherwise return the conflict node address.
  */
-ev_map_node_t* ev_map_insert(ev_map_t* handler, ev_map_node_t* node);
+API_LOCAL ev_map_node_t* ev_map_insert(ev_map_t* handler, ev_map_node_t* node);
 
 /**
  * @brief Delete the node from the map.
@@ -88,14 +89,14 @@ ev_map_node_t* ev_map_insert(ev_map_t* handler, ev_map_node_t* node);
  * @param handler   The pointer to the map
  * @param node      The node
  */
-void ev_map_erase(ev_map_t* handler, ev_map_node_t* node);
+API_LOCAL void ev_map_erase(ev_map_t* handler, ev_map_node_t* node);
 
 /**
  * @brief Get the number of nodes in the map.
  * @param handler   The pointer to the map
  * @return          The number of nodes
  */
-size_t ev_map_size(const ev_map_t* handler);
+API_LOCAL size_t ev_map_size(const ev_map_t* handler);
 
 /**
  * @brief Finds element with specific key
@@ -103,7 +104,7 @@ size_t ev_map_size(const ev_map_t* handler);
  * @param key       The key
  * @return          An iterator point to the found node
  */
-ev_map_node_t* ev_map_find(const ev_map_t* handler,
+API_LOCAL ev_map_node_t* ev_map_find(const ev_map_t* handler,
     const ev_map_node_t* key);
 
 /**
@@ -112,7 +113,7 @@ ev_map_node_t* ev_map_find(const ev_map_t* handler,
  * @param key       The key
  * @return          An iterator point to the found node
  */
-ev_map_node_t* ev_map_find_lower(const ev_map_t* handler,
+API_LOCAL ev_map_node_t* ev_map_find_lower(const ev_map_t* handler,
     const ev_map_node_t* key);
 
 /**
@@ -121,7 +122,7 @@ ev_map_node_t* ev_map_find_lower(const ev_map_t* handler,
  * @param key       The key
  * @return          An iterator point to the found node
  */
-ev_map_node_t* ev_map_find_upper(const ev_map_t* handler,
+API_LOCAL ev_map_node_t* ev_map_find_upper(const ev_map_t* handler,
     const ev_map_node_t* key);
 
 /**
@@ -129,28 +130,28 @@ ev_map_node_t* ev_map_find_upper(const ev_map_t* handler,
  * @param handler   The pointer to the map
  * @return          An iterator
  */
-ev_map_node_t* ev_map_begin(const ev_map_t* handler);
+API_LOCAL ev_map_node_t* ev_map_begin(const ev_map_t* handler);
 
 /**
  * @brief Returns an iterator to the end
  * @param handler   The pointer to the map
  * @return          An iterator
  */
-ev_map_node_t* ev_map_end(const ev_map_t* handler);
+API_LOCAL ev_map_node_t* ev_map_end(const ev_map_t* handler);
 
 /**
  * @brief Get an iterator next to the given one.
  * @param node      Current iterator
  * @return          Next iterator
  */
-ev_map_node_t* ev_map_next(const ev_map_node_t* node);
+API_LOCAL ev_map_node_t* ev_map_next(const ev_map_node_t* node);
 
 /**
  * @brief Get an iterator before the given one.
  * @param node      Current iterator
  * @return          Previous iterator
  */
-ev_map_node_t* ev_map_prev(const ev_map_node_t* node);
+API_LOCAL ev_map_node_t* ev_map_prev(const ev_map_node_t* node);
 
 /**
  * @} EV_UTILS/EV_UTILS_MAP

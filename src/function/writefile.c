@@ -14,8 +14,7 @@ static int _infra_writefile(lua_State* L)
     if (ret != 0)
     {
         ret = -ret;
-        infra_push_error(L, ret);
-        return lua_error(L);
+        return infra_raise_error(L, ret);
     }
 
     if (fwrite(data, data_sz, 1, file) != 1)

@@ -42,7 +42,7 @@ typedef struct infra_exec_opt
  * @param[in] opt   Process options.
  * @return          0 if success, otherwise failed.
  */
-int infra_exec(infra_os_pid_t* pid, const char* file, infra_exec_opt_t* opt);
+API_LOCAL int infra_exec(infra_os_pid_t* pid, const char* file, infra_exec_opt_t* opt);
 
 /**
  * @brief Wait for process to end.
@@ -51,7 +51,7 @@ int infra_exec(infra_os_pid_t* pid, const char* file, infra_exec_opt_t* opt);
  * @return          0 if process terminal, or following error code:
  *                  INFRA_ETIMEDOUT: The time-out interval elapsed.
  */
-int infra_waitpid(infra_os_pid_t pid, int* code, uint32_t ms);
+API_LOCAL int infra_waitpid(infra_os_pid_t pid, int* code, uint32_t ms);
 
 #ifdef __cplusplus
 }

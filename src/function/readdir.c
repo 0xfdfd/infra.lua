@@ -8,8 +8,7 @@
 static int _infra_readdir_raise_error(lua_State* L, DWORD errcode)
 {
     int new_errcode = infra_translate_sys_error(errcode);
-    infra_push_error(L, new_errcode);
-    return lua_error(L);
+    return infra_raise_error(L, new_errcode);
 }
 
 static const char* _infra_file_type(DWORD type)

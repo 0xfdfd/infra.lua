@@ -2,7 +2,20 @@
 #define __INFRA_LUA_COMPAT_SYS_H__
 
 #include <stdio.h>
+#include <errno.h>
 #include "defs.h"
+
+/**
+ * @brief Error code.
+ * @{
+ */
+#define INFRA_EOF       (-4095)
+#define INFRA_UNKNOWN   (-4094)
+#define INFRA_ETIMEDOUT (-138)
+#define INFRA_ENOENT    (-2)
+/**
+ * @}
+ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +54,13 @@ API_LOCAL int infra_fopen_s(FILE** pFile, const char* filename, const char* mode
  *                      unix, it must comes from errno.
  */
 API_LOCAL int infra_translate_sys_error(int errcode);
+
+/**
+ * @brief Convert error code into string that describes the error code.
+ * @param[in] errcode   Error code.
+ * @return              Describe string.
+ */
+API_LOCAL const char* infra_strerror(int errcode);
 
 #ifdef __cplusplus
 }

@@ -72,22 +72,6 @@ typedef intptr_t ssize_t;
 #   endif
 #endif
 
-///////////////////////////////////////////////////////////////////////////////
-// ERROR
-///////////////////////////////////////////////////////////////////////////////
-
-#include <errno.h>
-
-/**
- * @{
- */
-#define INFRA_EOF		(-4095)
-#define INFRA_UNKNOWN	(-4094)
-#define INFRA_ETIMEDOUT	(-ETIMEDOUT)
-/**
- * @}
- */
-
 #ifdef __cplusplus
 }
 #endif

@@ -1,23 +1,19 @@
 #ifndef __INFRA_UTILS_PIPE_H__
 #define __INFRA_UTILS_PIPE_H__
 
-#if defined(_WIN32)
-
-#include <Windows.h>
-typedef HANDLE  infra_os_pipe_t;
-#define INFRA_OS_PIPE_INVALID   INVALID_HANDLE_VALUE
-
-#else
-
-typedef int     infra_os_pipe_t;
-#define INFRA_OS_PIPE_INVALID   -1
-
-#endif
-
 #include "defs.h"
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if defined(_WIN32)
+#   include <Windows.h>
+    typedef HANDLE  infra_os_pipe_t;
+#   define INFRA_OS_PIPE_INVALID   INVALID_HANDLE_VALUE
+#else
+    typedef int     infra_os_pipe_t;
+#   define INFRA_OS_PIPE_INVALID   -1
 #endif
 
 typedef enum infra_os_pipe_flag
@@ -34,13 +30,13 @@ typedef enum infra_os_pipe_flag
  * @param[in] w_flags   Flags for fd[1].
  * @return              0 if success, otherwise failed.
  */
-int infra_pipe_open(infra_os_pipe_t fd[2], int r_flags, int w_flags);
+API_LOCAL int infra_pipe_open(infra_os_pipe_t fd[2], int r_flags, int w_flags);
 
 /**
  * @brief Close channel.
  * @param[in] fd        Channel.
  */
-void infra_pipe_close(infra_os_pipe_t fd);
+API_LOCAL void infra_pipe_close(infra_os_pipe_t fd);
 
 /**
  * @brief Write data into pipe.
@@ -49,7 +45,7 @@ void infra_pipe_close(infra_os_pipe_t fd);
  * @param[in] size      Data size.
  * @return              Less than 0 if failure, otherwise success.
  */
-ssize_t infra_pipe_write(infra_os_pipe_t fd, const void* data, size_t size);
+API_LOCAL ssize_t infra_pipe_write(infra_os_pipe_t fd, const void* data, size_t size);
 
 /**
  * @brief Read data from pipe.
@@ -58,7 +54,7 @@ ssize_t infra_pipe_write(infra_os_pipe_t fd, const void* data, size_t size);
  * @param[in] buf_sz    Buffer size.
  * @return              The number of bytes received, or less than 0 if failure.
  */
-ssize_t infra_pipe_read(infra_os_pipe_t fd, void* buf, size_t buf_sz);
+API_LOCAL ssize_t infra_pipe_read(infra_os_pipe_t fd, void* buf, size_t buf_sz);
 
 #ifdef __cplusplus
 }

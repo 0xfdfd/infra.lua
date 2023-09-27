@@ -9,9 +9,8 @@ static int _infra_readfile(lua_State* L)
     int ret = fopen_s(&file, path, "rb");
     if (ret != 0)
     {
-        ret = -ret;
-        infra_push_error(L, ret);
-        return lua_error(L);
+        ret = infra_translate_sys_error(ret);
+        return infra_raise_error(L, ret);
     }
 
     lua_pushstring(L, "");

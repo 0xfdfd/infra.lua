@@ -242,8 +242,7 @@ static int _infra_execute_open_pip_stdio(lua_State* L, infra_execute_t* self)
     return 0;
 
 error_open_stdio:
-    infra_push_error(L, errcode);
-    return lua_error(L);
+    return infra_raise_error(L, errcode);
 }
 
 static int _infra_execute_exec(lua_State* L, infra_execute_t* self)
@@ -260,8 +259,7 @@ static int _infra_execute_exec(lua_State* L, infra_execute_t* self)
     };
     if ((ret = infra_exec(&self->hProcess, self->file, &opt)) != 0)
     {
-        infra_push_error(L, ret);
-        return lua_error(L);
+        return infra_raise_error(L, ret);
     }
 
     /* Close unused things. */
