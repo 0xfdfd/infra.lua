@@ -17,6 +17,8 @@ endfunction()
 ###############################################################################
 
 add_library(${PROJECT_NAME}
+    src/utils/compat_lua.c
+    src/utils/compat_sys.c
     src/utils/exec.c
     src/utils/list.c
     src/utils/map.c
