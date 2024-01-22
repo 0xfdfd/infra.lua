@@ -1068,11 +1068,13 @@ finish:
     return errcode;
 }
 
-int infra_exec(infra_os_pid_t* pid, const char* file, infra_exec_opt_t* opt)
+int infra_exec(infra_pid_t** pid, const char* file, infra_exec_opt_t* opt)
 {
     int ret;
     int status;
     int exec_errorno;
+
+    infra_os_pid_t tmp_pid;
 
     infra_exec_data_t data = INFRA_EXEC_DATA_INIT;
     if ((ret = infra_pipe_open(data.child_pipe, INFRA_OS_PIPE_CLOEXEC, INFRA_OS_PIPE_CLOEXEC)) != 0)
@@ -1080,12 +1082,12 @@ int infra_exec(infra_os_pid_t* pid, const char* file, infra_exec_opt_t* opt)
         goto finish;
     }
 
-    if ((*pid = fork()) == 0)
+    if ((tmp_pid = fork()) == 0)
     {
         _infra_exec_child(file, opt, &data);
         abort();
     }
-    else if (*pid == -1)
+    else if (tmp_pid == -1)
     {
         ret = infra_translate_sys_error(errno);
         goto finish;
@@ -1268,6 +1270,111 @@ int infra_waitpid(infra_os_pid_t pid, int* code, uint32_t ms)
     }
 
     return _infra_waitpid_timed(pid, code, ms);
+}
+
+typedef struct infra_exec_ctx
+{
+    struct sigaction    old_act;
+    infra_mutex_t       guard;
+    ev_map_t            child_process_table;
+} infra_exec_ctx_t;
+
+static infra_exec_ctx_t* g_exec_ctx = NULL;
+
+static void _infra_exec_handle_sigchld_nolock(infra_pid_t* pid)
+{
+    int wstatus = 0;
+    if (waitpid(pid->sys_pid, &wstatus, WNOHANG) != pid->sys_pid)
+    {
+        abort();
+    }
+
+    if (WIFEXITED(wstatus))
+    {
+        pid->exit_status = INFRA_PROCESS_EXIT_NORMAL;
+        pid->u.exit_code = WEXITSTATUS(wstatus);
+    }
+    else if (WIFSIGNALED(wstatus))
+    {
+        pid->exit_status = INFRA_PROCESS_EXIT_SIGNAL;
+        pid->u.exit_signal = WTERMSIG(wstatus);
+    }
+}
+
+static void _infra_exec_on_sigchld(int sig, siginfo_t* info, void* ucontext)
+{
+    /* Only process SIGCHLD */
+    if (sig != SIGCHLD)
+    {
+        goto process_original;
+    }
+
+    /* Find pid */
+    infra_pid_t tmp_pid;
+    tmp_pid.sys_pid = info->si_pid;
+
+    infra_mutex_enter(&g_exec_ctx->guard);
+    {
+		ev_map_node_t* it = ev_map_find(&g_exec_ctx->child_process_table, &tmp_pid.node);
+		if (it != NULL)
+		{
+			infra_pid_t* pid = container_of(it, infra_pid_t, node);
+            _infra_exec_handle_sigchld_nolock(pid);
+		}
+    }
+    infra_mutex_leave(&g_exec_ctx->guard);
+
+    return;
+
+process_original:
+    /* Call original signal handle. */
+    if (g_exec_ctx->old_act.sa_flags & SA_SIGINFO)
+    {
+        if (g_exec_ctx->old_act.sa_sigaction != NULL)
+        {
+            g_exec_ctx->old_act.sa_sigaction(sig, info, ucontext);
+        }
+    }
+    else if (g_exec_ctx->old_act.sa_handler != NULL)
+    {
+        g_exec_ctx->old_act.sa_handler(sig);
+    }
+}
+
+static int _infra_exec_on_cmp_record(const ev_map_node_t* key1, const ev_map_node_t* key2, void* arg)
+{
+    const infra_pid_t* p1 = container_of(key1, infra_pid_t, node);
+    const infra_pid_t* p2 = container_of(key2, infra_pid_t, node);
+    if (p1->sys_pid == p2->sys_pid)
+    {
+        return 0;
+    }
+    return p1->sys_pid < p2->sys_pid ? -1 : 1;
+}
+
+void infra_exec_setup(void)
+{
+    if ((g_exec_ctx = calloc(1, sizeof(infra_exec_ctx_t))) == NULL)
+    {
+        abort();
+    }
+    infra_mutex_init(&g_exec_ctx->guard);
+    ev_map_init(&g_exec_ctx->child_process_table, _infra_exec_on_cmp_record, NULL);
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    if (sigfillset(&act.sa_mask))
+    {
+        abort();
+    }
+
+    act.sa_flags |= SA_SIGINFO;
+    act.sa_sigaction = _infra_exec_on_sigchld;
+
+    if (sigaction(SIGCHLD, &act, &g_exec_ctx->old) != 0)
+    {
+        abort();
+    }
 }
 
 #endif

@@ -22,6 +22,8 @@ add_library(${PROJECT_NAME}
     src/utils/exec.c
     src/utils/list.c
     src/utils/map.c
+    src/utils/mutex.c
+    src/utils/once.c
     src/utils/pipe.c
     src/function/__init__.c
     src/function/argparser.c

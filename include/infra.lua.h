@@ -48,6 +48,11 @@ struct lua_State;
 INFRA_API int luaopen_infra(struct lua_State* L);
 
 /**
+ * @brief Cleanup infra context.
+ */
+INFRA_API void infra_lua_cleanup(void);
+
+/**
  * @}
  */
 
