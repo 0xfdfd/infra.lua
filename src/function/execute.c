@@ -10,7 +10,8 @@
 #   include <unistd.h>
 #endif
 
-#define INFRA_EXECUTE_NAME  "__infra_execute"
+#define INFRA_EXECUTE_NAME          "__infra_execute"
+#define INFRA_EXECUTE_INJECT_TOKEN  "__u_infra_execute_inject"
 
 typedef struct infra_execute
 {
@@ -418,6 +419,26 @@ io_error:
     lua_settop(L, sp);
     infra_push_error(L, errcode);
     return -1;
+}
+
+struct lua_execute_inject_token
+{
+
+} lua_execute_inject_token_t;
+
+static void _infra_execute_inject_once(lua_State* L)
+{
+    int sp = lua_gettop(L);
+    int idx_upv = lua_upvalueindex(1);
+
+    if (lua_getfield(L, idx_upv, INFRA_EXECUTE_INJECT_TOKEN) == LUA_TNIL)
+    {
+
+    }
+    else
+    {
+        lua_pop(L, 1);
+    }
 }
 
 static int _infra_execute(lua_State* L)

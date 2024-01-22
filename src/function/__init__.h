@@ -50,7 +50,17 @@ typedef struct infra_lua_api
 {
     const char*         name;       /**< Function name. */
     lua_CFunction       addr;       /**< Function initialize entry. */
-    int                 upvalue;    /**< Whether require upvalue. */
+
+    /**
+     * @brief Whether require upvalue.
+     *
+     * If set, get upvalue by `lua_getupvalue(L, 1)`.
+     * The KEY must be prefixed with `__u_`.
+     *
+     * @warning Never access infra C API which need upvalue.
+     */
+    int                 upvalue;
+
     const char*         brief;      /**< Brief document. */
     const char*         document;   /**< Detail document. */
 } infra_lua_api_t;
