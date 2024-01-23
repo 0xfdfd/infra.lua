@@ -996,15 +996,26 @@ int infra_waitpid(infra_os_pid_t pid, int* code, uint32_t ms)
 #include <sys/types.h>
 #include <sys/wait.h>
 
-typedef struct infra_exec_data
+typedef enum infra_pid_exit_status
 {
-    infra_os_pipe_t     child_pipe[2];
-} infra_exec_data_t;
+	INFRA_PROCESS_EXIT_PENDING = 0,
+	INFRA_PROCESS_EXIT_NORMAL,
+	INFRA_PROCESS_EXIT_SIGNAL,
+} infra_pid_exit_status_t;
 
-#define INFRA_EXEC_DATA_INIT    \
-    {\
-        { INFRA_OS_PIPE_INVALID, INFRA_OS_PIPE_INVALID },\
-    }
+struct infra_pid_s
+{
+	ev_map_node_t           node;           /**< Map node. */
+	infra_os_pid_t          sys_pid;        /**< System PID. */
+    infra_os_pipe_t         child_pipe[2];  /**< Pipe for communication. */
+
+	infra_pid_exit_status_t exit_status;
+	union
+	{
+		int                 exit_code;
+		int                 exit_signal;
+	} u;
+};
 
 #define NSEC_PER_SEC 1000000000
 
@@ -1068,37 +1079,70 @@ finish:
     return errcode;
 }
 
+static int _infra_new_empty_pid(infra_pid_t** obj)
+{
+    int ret;
+    infra_pid_t* pid = calloc(1, sizeof(infra_pid_t));
+
+    if ((ret = infra_pipe_open(pid->child_pipe, INFRA_OS_PIPE_CLOEXEC, INFRA_OS_PIPE_CLOEXEC)) != 0)
+    {
+        free(pid);
+        return ret;
+    }
+    pid->sys_pid = INFRA_OS_PID_INVALID;
+
+    *obj = pid;
+    return 0;
+}
+
+void infra_spawn_exit(infra_pid_t* pid)
+{
+    if (pid->child_pipe[0] != INFRA_OS_PIPE_INVALID)
+    {
+        infra_pipe_close(pid->child_pipe[0]);
+        pid->child_pipe[0] = INFRA_OS_PIPE_INVALID;
+    }
+    if (pid->child_pipe[1] != INFRA_OS_PIPE_INVALID)
+    {
+        infra_pipe_close(pid->child_pipe[1]);
+        pid->child_pipe[1] = INFRA_OS_PIPE_INVALID;
+    }
+}
+
 int infra_exec(infra_pid_t** pid, const char* file, infra_exec_opt_t* opt)
 {
     int ret;
     int status;
     int exec_errorno;
 
-    infra_os_pid_t tmp_pid;
-
-    infra_exec_data_t data = INFRA_EXEC_DATA_INIT;
-    if ((ret = infra_pipe_open(data.child_pipe, INFRA_OS_PIPE_CLOEXEC, INFRA_OS_PIPE_CLOEXEC)) != 0)
+    if ((ret = _infra_new_empty_pid(pid)) != 0)
     {
-        goto finish;
+        return ret;
     }
+    infra_pid_t* obj = *pid;
 
-    if ((tmp_pid = fork()) == 0)
+    sigset_t sig_mask;
+
+    obj->sys_pid = fork();
+
+    if (() == 0)
     {
         _infra_exec_child(file, opt, &data);
         abort();
     }
-    else if (tmp_pid == -1)
+    else if (obj->sys_pid == -1)
     {
+        infra_spawn_exit(obj);
         ret = infra_translate_sys_error(errno);
-        goto finish;
+        return ret;
     }
 
     /* Close unused peer. */
-    infra_pipe_close(data.child_pipe[1]);
-    data.child_pipe[1] = INFRA_OS_PIPE_INVALID;
+    infra_pipe_close(obj->child_pipe[1]);
+    obj->child_pipe[1] = INFRA_OS_PIPE_INVALID;
 
     /* Wait for child execve result. */
-    ret = infra_pipe_read(data.child_pipe[0], &exec_errorno, sizeof(exec_errorno));
+    ret = infra_pipe_read(obj->child_pipe[0], &exec_errorno, sizeof(exec_errorno));
 
     if (ret == INFRA_EOF)
     {

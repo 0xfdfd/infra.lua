@@ -36,25 +36,7 @@ typedef struct infra_exec_opt
     infra_os_pipe_t h_stderr;   /**< pipe for stderr. */
 } infra_exec_opt_t;
 
-typedef enum infra_pid_exit_status
-{
-    INFRA_PROCESS_EXIT_PENDING = 0,
-    INFRA_PROCESS_EXIT_NORMAL,
-    INFRA_PROCESS_EXIT_SIGNAL,
-} infra_pid_exit_status_t;
-
-typedef struct infra_pid_s
-{
-	ev_map_node_t           node;       /**< Map node. */
-	infra_os_pid_t          sys_pid;    /**< System PID. */
-
-    infra_pid_exit_status_t exit_status;
-    union
-    {
-		int                 exit_code;
-		int                 exit_signal;
-    } u;
-} infra_pid_t;
+typedef struct infra_pid_s infra_pid_t;
 
 /**
  * @brief Initializes the process handle and starts the process.
@@ -73,6 +55,8 @@ API_LOCAL int infra_exec(infra_pid_t** pid, const char* file, infra_exec_opt_t* 
  *                  INFRA_ETIMEDOUT: The time-out interval elapsed.
  */
 API_LOCAL int infra_waitpid(infra_os_pid_t pid, int* code, uint32_t ms);
+
+API_LOCAL void infra_spawn_exit(infra_pid_t* pid);
 
 /**
  * @brief Cleanup context.
